@@ -44,6 +44,9 @@ th{background:#e8f5e9}
 <button onclick="showTab('item')">Items</button>
 <button onclick="showTab('orders')">Orders</button>
 </nav>
+<!-- Add Logout Button -->
+<button id="logoutBtn" style="margin-top:10px;padding:10px 15px;border:none;border-radius:20px;background:#c62828;color:#fff;cursor:pointer" onclick="logout()">Logout</button>
+</nav>
 
 <!-- CHANGE CREDENTIAL -->
 <section id="cred">
@@ -168,6 +171,18 @@ window.login = async function(){
   loadAll();
  } else alert("Wrong login");
 }
+
+// LOGOUT FUNCTION
+window.logout = function() {
+  mainSection.style.display = "none";
+  loginSection.style.display = "block";
+  // Optionally clear input fields
+  adminId.value = "";
+  adminPass.value = "";
+  // Hide all sections except login
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  loginSection.classList.add("active");
+};
 
 window.changeCred = async function(){
  await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
