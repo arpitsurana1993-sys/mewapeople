@@ -32,14 +32,14 @@ th{background:#e8f5e9}
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
 <label>Name *</label>
-<input id="name" required>
+<input id="name">
 
 <label>Mobile *</label>
 <input id="mobile" type="tel" inputmode="numeric"
-oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
+oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <label>Address *</label>
-<textarea id="address" required></textarea>
+<textarea id="address"></textarea>
 
 <label>Delivery Type</label>
 <select id="dtype">
@@ -66,7 +66,7 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
  </select>
 </div>
 
-<button id="addBtn">Add Item</button>
+<button type="button" id="addBtn">Add Item</button>
 
 <table>
 <thead>
@@ -79,14 +79,14 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
 <tbody id="cart"></tbody>
 </table>
 
-<button id="orderBtn">Place Order & WhatsApp</button>
+<button type="button" id="orderBtn">Place Order & WhatsApp</button>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from
-"https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc }
+from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
@@ -104,14 +104,14 @@ let categories=[], items=[], cartItems=[];
 
 /* LOAD DATA */
 async function loadAll(){
- let cs = await getDocs(collection(db,"categories"));
+ const cs = await getDocs(collection(db,"categories"));
  categories = cs.docs.map(d=>d.data());
  cat.innerHTML="";
  categories.forEach(c=>{
   cat.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
- let it = await getDocs(collection(db,"items"));
+ const it = await getDocs(collection(db,"items"));
  items = it.docs.map(d=>d.data());
  loadItems();
 }
@@ -129,7 +129,7 @@ function loadItems(){
 
 /* ADD ITEM */
 function addItem(){
- let i = items.find(x=>x.en===item.value);
+ const i = items.find(x=>x.en===item.value);
  cartItems.push({
   en:i.en,
   hi:i.hi,
@@ -138,7 +138,6 @@ function addItem(){
  });
  renderCart();
 }
-window.addItem = addItem;
 
 /* CART */
 function renderCart(){
@@ -170,10 +169,10 @@ async function placeOrder(){
   return;
  }
 
- let orderCode="ORD"+Date.now();
- let time=new Date().toLocaleString();
+ const orderCode="ORD"+Date.now();
+ const time=new Date().toLocaleString();
 
- let itemsHindi = cartItems
+ const itemsHindi = cartItems
   .map(i=>`${i.hi} ${i.qty} ${i.unit}`)
   .join("\n");
 
@@ -187,7 +186,7 @@ async function placeOrder(){
   time:time
  });
 
- let msg =
+ const msg =
 `ऑर्डर नंबर: ${orderCode}
 नाम: ${name.value}
 मोबाइल: ${mobile.value}
@@ -197,20 +196,17 @@ async function placeOrder(){
 सामान:
 ${itemsHindi}`;
 
- window.open(
-  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
-  "_blank"
- );
+ /* 🔥 THIS IS THE FIX */
+ window.location.href =
+  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
 
- alert("Order Placed Successfully");
  cartItems=[];
  renderCart();
 }
-window.placeOrder = placeOrder;
 
-/* BUTTON BINDING (MOBILE FIX) */
-document.getElementById("addBtn").addEventListener("click", addItem);
-document.getElementById("orderBtn").addEventListener("click", placeOrder);
+/* BUTTON FIX */
+document.getElementById("addBtn").onclick = addItem;
+document.getElementById("orderBtn").onclick = placeOrder;
 
 </script>
 
