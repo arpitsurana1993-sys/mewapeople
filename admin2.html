@@ -97,7 +97,7 @@ th{background:#e8f5e9}
 <th>Items</th>
 <th>Time</th>
 <th>❌</th>
-<th>🖨️ Print</th>
+<th>Print</th>
 </tr>
 </thead>
 <tbody id="orderTable"></tbody>
@@ -251,7 +251,7 @@ async function loadOrders(){
 <td>${o.items}</td>
 <td>${o.time}</td>
 <td class='delete' onclick="delOrder('${d.id}')">❌</td>
-<td><button onclick="printOrder('${encodeURIComponent(JSON.stringify(o))}')">🖨️ Print</button></td>
+<td><button style='padding:6px 12px;font-size:15px;background:#1976d2;color:#fff;border:none;border-radius:5px;cursor:pointer' onclick="printOrder('${encodeURIComponent(JSON.stringify(o))}')">🖨️ Print</button></td>
 </tr>`;
  });
 }
