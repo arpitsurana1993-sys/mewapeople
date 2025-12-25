@@ -97,17 +97,18 @@ th{background:#e8f5e9}
 <th>Items</th>
 <th>Time</th>
 <th>❌</th>
+<th>🖨️ Print</th>
 </tr>
 </thead>
 <tbody id="orderTable"></tbody>
 </table>
 <!-- Printable Order Section -->
-<div id="printOrder" style="width:700px; margin:auto; border:1px solid #ccc; padding:20px; background:#fff;">
+<div id="printOrder" style="width:700px; margin:auto; border:1px solid #ccc; padding:20px; background:#fff; display:none;">
   <h2>Order Details</h2>
-  <p><strong>Customer Name:</strong> ____________________________</p>
-  <p><strong>Address:</strong> _________________________________</p>
-  <p><strong>Phone No:</strong> ________________________________</p>
-  <p><strong>Type of Delivery:</strong> ________________________</p>
+  <p><strong>Customer Name:</strong> <span id="pName">____________________________</span></p>
+  <p><strong>Address:</strong> <span id="pAddress">_______________________________</span></p>
+  <p><strong>Phone No:</strong> <span id="pMobile">______________________________</span></p>
+  <p><strong>Type of Delivery:</strong> <span id="pType">________________________</span></p>
   <br>
   <table border="1" cellspacing="0" cellpadding="8" style="width:100%; border-collapse:collapse;">
     <thead>
@@ -117,7 +118,7 @@ th{background:#e8f5e9}
         <th>Price</th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="pItems">
       <tr><td>________________________</td><td>__________</td><td></td></tr>
       <tr><td>________________________</td><td>__________</td><td></td></tr>
       <tr><td>________________________</td><td>__________</td><td></td></tr>
@@ -125,16 +126,13 @@ th{background:#e8f5e9}
       <tr><td>________________________</td><td>__________</td><td></td></tr>
     </tbody>
   </table>
-  <br>
-  <button onclick="window.print()" style="margin-top:20px; padding:10px 20px; font-size:16px;">Print Order</button>
 </div>
 
 <style>
 @media print {
-  body * { visibility: hidden; }
-  #printOrder, #printOrder * { visibility: visible; }
+  body * { visibility: hidden !important; }
+  #printOrder, #printOrder * { visibility: visible !important; }
   #printOrder { position: absolute; left: 0; top: 0; width: 100%; }
-  button { display: none; }
 }
 </style>
 </section>
@@ -253,8 +251,34 @@ async function loadOrders(){
 <td>${o.items}</td>
 <td>${o.time}</td>
 <td class='delete' onclick="delOrder('${d.id}')">❌</td>
+<td><button onclick="printOrder('${encodeURIComponent(JSON.stringify(o))}')">🖨️ Print</button></td>
 </tr>`;
  });
+}
+
+window.printOrder = function(orderStr) {
+  var o = JSON.parse(decodeURIComponent(orderStr));
+  document.getElementById('pName').textContent = o.name || '';
+  document.getElementById('pAddress').textContent = o.address || '';
+  document.getElementById('pMobile').textContent = o.mobile || '';
+  document.getElementById('pType').textContent = o.type || '';
+  // Items parsing: expects o.items as string, e.g. "item1 x2, item2 x3"
+  var itemsArr = [];
+  if(o.items){
+    itemsArr = o.items.split(',').map(x => x.trim()).filter(x => x);
+  }
+  var rows = '';
+  for(var i=0; i<5; i++){
+    if(itemsArr[i]){
+      var parts = itemsArr[i].split(' x');
+      rows += `<tr><td>${parts[0]||''}</td><td>${parts[1]||''}</td><td></td></tr>`;
+    }else{
+      rows += `<tr><td>________________________</td><td>__________</td><td></td></tr>`;
+    }
+  }
+  document.getElementById('pItems').innerHTML = rows;
+  document.getElementById('printOrder').style.display = 'block';
+  setTimeout(function(){ window.print(); document.getElementById('printOrder').style.display = 'none'; }, 200);
 }
 window.delOrder=async id=>{
  await deleteDoc(doc(db,"orders",id));
