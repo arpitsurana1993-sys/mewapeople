@@ -147,6 +147,11 @@ function loadItems(){
 addBtn.onclick=function(){
  let s=allItems.find(i=>i.en===item.value);
  if(!s)return;
+ // Prevent duplicate items
+ if(cart.some(c => c.hi === s.hi)) {
+   alert("Item already added!");
+   return;
+ }
  cart.push({hi:s.hi,qty:qty.value,unit:unit.value});
  renderCart();
 };
@@ -221,3 +226,4 @@ ${itemsHindi}`
 
 </body>
 </html>
+
