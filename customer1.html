@@ -2,61 +2,61 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Surana Ashok Kumar Arvind Kumar – Order</title>
+<title>Surana Ashok Kumar Arvind Kumar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial;background:#e8f5e9;margin:0;padding:15px}
-.container{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:12px}
-h1{text-align:center;color:#1b5e20}
-label{font-weight:600;margin-top:10px;display:block}
-input,select,textarea{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:1px solid #ccc}
-button{padding:12px;border:none;border-radius:25px;background:#25d366;color:#fff;font-size:16px;width:100%;margin-top:15px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:8px;text-align:center}
+body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
+.container{max-width:700px;margin:auto;background:#fff;padding:15px;border-radius:12px}
+h2{text-align:center;color:#1b5e20}
+label{font-weight:bold;margin-top:10px;display:block}
+input,select,textarea,button{
+ width:100%;padding:10px;margin-top:5px;font-size:16px
+}
+button{
+ background:#2e7d32;color:#fff;border:none;border-radius:25px;
+ margin-top:15px;cursor:pointer
+}
+table{width:100%;margin-top:10px;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
-.delete{color:red;cursor:pointer}
+.qty{width:60px}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🛒 Surana Ashok Kumar Arvind Kumar</h1>
-<p style="text-align:center">
-Mirchi Bazaar, Jodhpur<br>
-📞 9462439993
-</p>
+<h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
-<!-- CUSTOMER DETAILS -->
 <label>Name *</label>
 <input id="name" required>
 
 <label>Mobile *</label>
-<input id="mobile" inputmode="numeric" pattern="[0-9]*" required>
+<input id="mobile" type="tel" inputmode="numeric" pattern="[0-9]*"
+oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
 
 <label>Address *</label>
 <textarea id="address" required></textarea>
 
-<label>Order Type *</label>
-<select id="type">
-<option value="Home Delivery">Home Delivery</option>
-<option value="Pickup from Shop">Pickup from Shop</option>
+<label>Delivery Type</label>
+<select id="dtype">
+ <option>Home Delivery</option>
+ <option>Pick from Shop</option>
 </select>
 
 <hr>
 
-<!-- ITEMS -->
 <label>Category</label>
-<select id="category"></select>
+<select id="cat"></select>
 
 <label>Item</label>
 <select id="item"></select>
 
 <label>Quantity</label>
-<input id="qty" inputmode="numeric">
+<input id="qty" type="number" min="1" value="1" class="qty">
 
-<button onclick="addItem()">➕ Add Item</button>
+<button onclick="addItem()">Add Item</button>
 
 <table>
 <thead>
@@ -66,17 +66,18 @@ Mirchi Bazaar, Jodhpur<br>
 <th>❌</th>
 </tr>
 </thead>
-<tbody id="cartTable"></tbody>
+<tbody id="cart"></tbody>
 </table>
 
-<button onclick="placeOrder()">✅ Place Order & WhatsApp</button>
+<button onclick="placeOrder()">Place Order & WhatsApp</button>
 
 </div>
 
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from
+"https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
@@ -90,131 +91,114 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories = {};
-let items = [];
-let cart = [];
+let categories=[], items=[], cartItems=[];
 
 /* LOAD DATA */
-async function loadData(){
- const catSnap = await getDocs(collection(db,"categories"));
- catSnap.forEach(d=>{
-  categories[d.data().en] = d.data().hi;
+async function loadAll(){
+ let cs = await getDocs(collection(db,"categories"));
+ categories = cs.docs.map(d=>d.data());
+ cat.innerHTML="";
+ categories.forEach(c=>{
+  cat.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
+ loadItems();
 
- const itemSnap = await getDocs(collection(db,"items"));
- items = [];
- itemSnap.forEach(d=>items.push(d.data()));
-
- renderCategories();
+ let it = await getDocs(collection(db,"items"));
+ items = it.docs.map(d=>d.data());
+ loadItems();
 }
-loadData();
+loadAll();
 
-/* CATEGORY + ITEM (MOBILE SAFE) */
-function renderCategories(){
- category.innerHTML="";
- Object.keys(categories).forEach(c=>{
-  category.innerHTML += `<option value="${c}">
-   ${c} / ${categories[c]}
-  </option>`;
- });
- renderItems();
-}
+cat.onchange = loadItems;
 
-category.addEventListener("change",renderItems);
-
-function renderItems(){
+function loadItems(){
  item.innerHTML="";
- items.filter(i=>i.cat===category.value)
+ items.filter(i=>i.cat===cat.value)
  .forEach(i=>{
-  item.innerHTML += `<option value="${i.en}">
-   ${i.en} / ${i.hi}
-  </option>`;
+  item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
 }
 
-/* CART (STORE HINDI SEPARATELY) */
+/* CART */
 window.addItem=function(){
- if(!item.value || !qty.value){
-  alert("Select item & quantity");
-  return;
- }
- cart.push({
-  en: item.value,
-  hi: item.options[item.selectedIndex].text.split("/")[1].trim(),
-  qty: qty.value
- });
+ let i = items.find(x=>x.en===item.value);
+ cartItems.push({en:i.en, hi:i.hi, qty:qty.value});
  renderCart();
- qty.value="";
 }
 
 function renderCart(){
- cartTable.innerHTML="";
- cart.forEach((c,i)=>{
-  cartTable.innerHTML+=`<tr>
+ cart.innerHTML="";
+ cartItems.forEach((c,idx)=>{
+  cart.innerHTML+=`
+  <tr>
    <td>${c.en} / ${c.hi}</td>
    <td>${c.qty}</td>
-   <td class="delete" onclick="del(${i})">❌</td>
+   <td onclick="removeItem(${idx})">❌</td>
   </tr>`;
  });
 }
-window.del=i=>{cart.splice(i,1);renderCart();}
 
-/* ORDER */
+window.removeItem=function(i){
+ cartItems.splice(i,1);
+ renderCart();
+}
+
+/* PLACE ORDER */
 window.placeOrder=async function(){
- if(!name.value||!mobile.value||!address.value){
-  alert("Please fill all required fields");
+
+ if(name.value.trim()==="" ||
+    mobile.value.trim()==="" ||
+    address.value.trim()===""){
+  alert("Name, Mobile and Address are mandatory");
   return;
  }
- if(cart.length===0){
+
+ if(mobile.value.length<10){
+  alert("Enter valid mobile number");
+  return;
+ }
+
+ if(cartItems.length===0){
   alert("Add at least one item");
   return;
  }
 
- let code="ORD-"+Date.now();
- let time=new Date().toLocaleString();
+ let orderCode = "ORD"+Date.now();
+ let time = new Date().toLocaleString();
+
+ let itemsHindi = cartItems
+  .map(i=>`${i.hi} x ${i.qty}`)
+  .join(", ");
 
  await addDoc(collection(db,"orders"),{
-  code,
+  code:orderCode,
   name:name.value,
   mobile:mobile.value,
   address:address.value,
-  type:type.value,
-  items:cart.map(c=>`${c.hi} x ${c.qty}`).join(", "),
-  time
+  type:dtype.value,
+  items:itemsHindi,
+  time:time
  });
 
- let msg=`Order No: ${code}
+ let msg =
+ `Order No: ${orderCode}
 Name: ${name.value}
 Mobile: ${mobile.value}
 Address: ${address.value}
-Type: ${type.value}
+Type: ${dtype.value}
 
 Items:
-`;
- cart.forEach(c=>msg+=`${c.hi} x ${c.qty}\n`);
+${itemsHindi}`;
 
  window.open(
-  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
-  "_blank"
+ `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
+ "_blank"
  );
 
- alert("Order placed successfully");
- cart=[];renderCart();
+ alert("Order Placed");
+ cartItems=[];
+ renderCart();
 }
-</script>
-
-<!-- ✅ HINDI TYPING FOR ADDRESS (LOW HASSLE) -->
-<script src="https://www.google.com/jsapi"></script>
-<script>
-google.load("elements", "1", { packages: "transliteration" });
-google.setOnLoadCallback(function () {
- var control = new google.elements.transliteration.TransliterationControl({
-  sourceLanguage: 'en',
-  destinationLanguage: ['hi'],
-  transliterationEnabled: true
- });
- control.makeTransliteratable(['address']);
-});
 </script>
 
 </body>
