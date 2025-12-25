@@ -2,52 +2,81 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Surana Ashok Kumar Arvind Kumar</title>
+<title>Surana Ashok Kumar Arvind Kumar – Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial;background:#e3f2fd;margin:0;padding:15px}
-.container{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+body{font-family:Arial;background:#e8f5e9;margin:0;padding:15px}
+.container{max-width:900px;margin:auto;background:#fff;padding:20px;border-radius:12px}
 h1{text-align:center;color:#1b5e20}
-input,select,button{width:100%;padding:10px;margin-top:8px}
-button{background:#25d366;color:#fff;border:none;border-radius:25px;font-size:16px}
+label{font-weight:600;margin-top:10px;display:block}
+input,select,textarea{width:100%;padding:10px;margin-top:5px;border-radius:8px;border:1px solid #ccc}
+button{padding:12px;border:none;border-radius:25px;background:#25d366;color:#fff;font-size:16px;width:100%;margin-top:15px}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #ccc;padding:8px;text-align:center}
+th{background:#e8f5e9}
+.delete{color:red;cursor:pointer}
 </style>
-
 </head>
+
 <body>
-
 <div class="container">
+
 <h1>🛒 Surana Ashok Kumar Arvind Kumar</h1>
-<p style="text-align:center">Mirchi Bazaar, Jodhpur | 📞 9462439993</p>
+<p style="text-align:center">
+Mirchi Bazaar, Jodhpur<br>
+📞 9462439993
+</p>
 
-<input id="name" placeholder="Name / नाम" required>
-<input id="mobile" placeholder="Mobile / मोबाइल" inputmode="numeric" pattern="[0-9]*" required>
-<input id="address" placeholder="Address / पता" required>
+<!-- CUSTOMER DETAILS -->
+<label>Name *</label>
+<input id="name" required>
 
+<label>Mobile *</label>
+<input id="mobile" inputmode="numeric" pattern="[0-9]*" required>
+
+<label>Address *</label>
+<textarea id="address" required></textarea>
+
+<label>Order Type *</label>
 <select id="type">
-<option>Home Delivery / होम डिलीवरी</option>
-<option>Pickup from Shop / दुकान से लें</option>
+<option value="Home Delivery">Home Delivery</option>
+<option value="Pickup from Shop">Pickup from Shop</option>
 </select>
 
-<select id="category" onchange="loadItems()"></select>
-<select id="item"></select>
-<input id="qty" placeholder="Quantity / मात्रा" inputmode="numeric" pattern="[0-9]*">
+<hr>
 
-<button onclick="add()">➕ Add Item</button>
+<!-- ITEMS -->
+<label>Category</label>
+<select id="category"></select>
+
+<label>Item</label>
+<select id="item"></select>
+
+<label>Quantity</label>
+<input id="qty" inputmode="numeric">
+
+<button onclick="addItem()">➕ Add Item</button>
 
 <table>
-<thead><tr><th>Item</th><th>Qty</th></tr></thead>
-<tbody id="list"></tbody>
+<thead>
+<tr>
+<th>Item</th>
+<th>Qty</th>
+<th>❌</th>
+</tr>
+</thead>
+<tbody id="cartTable"></tbody>
 </table>
 
-<button onclick="place()">📲 Place Order on WhatsApp</button>
+<button onclick="placeOrder()">✅ Place Order & WhatsApp</button>
+
 </div>
 
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
@@ -61,45 +90,104 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let cart=[];
+let categories = {};
+let items = [];
+let cart = [];
 
-async function loadCategories(){
- let snap=await getDocs(collection(db,"categories"));
+/* LOAD DATA */
+async function loadData(){
+ const catSnap = await getDocs(collection(db,"categories"));
+ catSnap.forEach(d=>{
+  categories[d.data().en] = d.data().hi;
+ });
+
+ const itemSnap = await getDocs(collection(db,"items"));
+ items = [];
+ itemSnap.forEach(d=>items.push(d.data()));
+
+ renderCategories();
+}
+loadData();
+
+/* MOBILE SAFE CATEGORY LOAD */
+function renderCategories(){
  category.innerHTML="";
- snap.forEach(d=>{
-  let c=d.data();
-  category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+ Object.keys(categories).forEach(c=>{
+  category.innerHTML += `<option value="${c}">
+   ${c} / ${categories[c]}
+  </option>`;
  });
- loadItems();
+ renderItems();
 }
-window.loadItems=async function(){
- let snap=await getDocs(collection(db,"items"));
+
+category.addEventListener("change",renderItems);
+
+function renderItems(){
  item.innerHTML="";
- snap.forEach(d=>{
-  let i=d.data();
-  if(i.cat===category.value){
-   item.innerHTML+=`<option>${i.en} / ${i.hi}</option>`;
-  }
+ items.filter(i=>i.cat===category.value)
+ .forEach(i=>{
+  item.innerHTML += `<option value="${i.en}">
+   ${i.en} / ${i.hi}
+  </option>`;
  });
 }
-window.add=function(){
- if(!item.value||!qty.value)return alert("Enter item & quantity");
- cart.push(`${item.value} x ${qty.value}`);
- list.innerHTML+=`<tr><td>${item.value}</td><td>${qty.value}</td></tr>`;
+
+/* CART */
+window.addItem=function(){
+ if(!item.value || !qty.value){alert("Select item & quantity");return;}
+ cart.push({name:item.options[item.selectedIndex].text,qty:qty.value});
+ renderCart();
  qty.value="";
 }
-window.place=async function(){
- if(!name.value||!mobile.value||!address.value)return alert("Fill all details");
- let code="ORD"+Date.now();
- let msg=`Order No: ${code}%0AName: ${name.value}%0AMobile: ${mobile.value}%0AAddress: ${address.value}%0AType: ${type.value}%0AItems:%0A${cart.join("%0A")}`;
- await addDoc(collection(db,"orders"),{
-  code, name:name.value, mobile:mobile.value, address:address.value,
-  type:type.value, items:cart.join(", "), time:new Date().toLocaleString()
+
+function renderCart(){
+ cartTable.innerHTML="";
+ cart.forEach((c,i)=>{
+  cartTable.innerHTML+=`<tr>
+   <td>${c.name}</td>
+   <td>${c.qty}</td>
+   <td class="delete" onclick="del(${i})">❌</td>
+  </tr>`;
  });
- window.open(`https://wa.me/919462439993?text=${msg}`);
- cart=[]; list.innerHTML="";
 }
-loadCategories();
+window.del=i=>{cart.splice(i,1);renderCart();}
+
+/* ORDER */
+window.placeOrder=async function(){
+ if(!name.value||!mobile.value||!address.value){
+  alert("Please fill all required fields");
+  return;
+ }
+ if(cart.length===0){
+  alert("Add at least one item");
+  return;
+ }
+
+ let code="ORD-"+Date.now();
+ let time=new Date().toLocaleString();
+
+ await addDoc(collection(db,"orders"),{
+  code,name:name.value,mobile:mobile.value,
+  address:address.value,type:type.value,
+  items:cart.map(c=>`${c.name} x ${c.qty}`).join(", "),
+  time
+ });
+
+ let msg=`Order No: ${code}
+Name: ${name.value}
+Mobile: ${mobile.value}
+Address: ${address.value}
+Type: ${type.value}
+
+Items:
+`;
+ cart.forEach(c=>msg+=`${c.name} x ${c.qty}\n`);
+
+ window.open(`https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,"_blank");
+
+ alert("Order placed successfully");
+ cart=[];renderCart();
+}
 </script>
 
 </body>
