@@ -101,6 +101,42 @@ th{background:#e8f5e9}
 </thead>
 <tbody id="orderTable"></tbody>
 </table>
+<!-- Printable Order Section -->
+<div id="printOrder" style="width:700px; margin:auto; border:1px solid #ccc; padding:20px; background:#fff;">
+  <h2>Order Details</h2>
+  <p><strong>Customer Name:</strong> ____________________________</p>
+  <p><strong>Address:</strong> _________________________________</p>
+  <p><strong>Phone No:</strong> ________________________________</p>
+  <p><strong>Type of Delivery:</strong> ________________________</p>
+  <br>
+  <table border="1" cellspacing="0" cellpadding="8" style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th>Item Name</th>
+        <th>Quantity</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>________________________</td><td>__________</td><td></td></tr>
+      <tr><td>________________________</td><td>__________</td><td></td></tr>
+      <tr><td>________________________</td><td>__________</td><td></td></tr>
+      <tr><td>________________________</td><td>__________</td><td></td></tr>
+      <tr><td>________________________</td><td>__________</td><td></td></tr>
+    </tbody>
+  </table>
+  <br>
+  <button onclick="window.print()" style="margin-top:20px; padding:10px 20px; font-size:16px;">Print Order</button>
+</div>
+
+<style>
+@media print {
+  body * { visibility: hidden; }
+  #printOrder, #printOrder * { visibility: visible; }
+  #printOrder { position: absolute; left: 0; top: 0; width: 100%; }
+  button { display: none; }
+}
+</style>
 </section>
 
 </section>
