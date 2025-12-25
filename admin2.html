@@ -22,7 +22,6 @@ th{background:#e8f5e9}
 </head>
 
 <body>
-
 <div class="container">
 
 <h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
@@ -56,15 +55,15 @@ th{background:#e8f5e9}
 <!-- CATEGORIES -->
 <section id="cat">
 <h3>Categories</h3>
-
 <input id="catEn" placeholder="Category (English)"
  oninput="engToHindi(this.value,'catHi')">
-
 <input id="catHi" placeholder="Category (Hindi)">
 <button onclick="addCategory()">Add</button>
 
 <table>
-<thead><tr><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
+<thead>
+<tr><th>English</th><th>Hindi</th><th>❌</th></tr>
+</thead>
 <tbody id="catTable"></tbody>
 </table>
 </section>
@@ -73,10 +72,8 @@ th{background:#e8f5e9}
 <section id="item">
 <h3>Items</h3>
 <select id="catSelect"></select>
-
 <input id="itemEn" placeholder="Item (English)"
  oninput="engToHindi(this.value,'itemHi')">
-
 <input id="itemHi" placeholder="Item (Hindi)">
 <button onclick="addItem()">Add</button>
 
@@ -128,8 +125,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ---------- LOGIN ---------- */
-async function login(){
+/* LOGIN */
+window.login = async function(){
  let snap = await getDoc(doc(db,"config","login"));
  let data = snap.data();
  if(adminId.value===data.id && adminPass.value===data.pass){
@@ -138,28 +135,47 @@ async function login(){
   loadAll();
  } else alert("Wrong login");
 }
-window.login=login;
 
-async function changeCred(){
+window.changeCred = async function(){
  await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
  alert("Updated");
 }
-window.changeCred=changeCred;
 
-/* ---------- NAV ---------- */
+/* NAV */
 window.showTab=function(id){
  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 }
 
-/* ---------- CATEGORY ---------- */
+/* CATEGORY */
 window.addCategory=async function(){
  await addDoc(collection(db,"categories"),{en:catEn.value,hi:catHi.value});
  catEn.value=catHi.value="";
  loadCategories();
 }
 
-/* ---------- ITEM ---------- */
+async function loadCategories(){
+ catTable.innerHTML="";
+ catSelect.innerHTML="";
+ let snap=await getDocs(collection(db,"categories"));
+ snap.forEach(d=>{
+  let c=d.data();
+  catTable.innerHTML+=`<tr>
+   <td>${c.en}</td>
+   <td>${c.hi}</td>
+   <td class='delete' onclick="delCat('${d.id}')">❌</td>
+  </tr>`;
+  catSelect.innerHTML+=`<option value="${c.en}">
+   ${c.en} / ${c.hi}
+  </option>`;
+ });
+}
+window.delCat=async id=>{
+ await deleteDoc(doc(db,"categories",id));
+ loadCategories();
+}
+
+/* ITEMS */
 window.addItem=async function(){
  await addDoc(collection(db,"items"),{
   cat:catSelect.value,
@@ -170,28 +186,17 @@ window.addItem=async function(){
  loadItems();
 }
 
-/* ---------- LOAD ---------- */
-async function loadCategories(){
- catTable.innerHTML="";
- catSelect.innerHTML="";
- let snap=await getDocs(collection(db,"categories"));
- snap.forEach(d=>{
-  let c=d.data();
-  catTable.innerHTML+=`<tr><td>${c.en}</td><td>${c.hi}</td><td class='delete' onclick="delCat('${d.id}')">❌</td></tr>`;
-  catSelect.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
- });
-}
-window.delCat=async id=>{
- await deleteDoc(doc(db,"categories",id));
- loadCategories();
-}
-
 async function loadItems(){
  itemTable.innerHTML="";
  let snap=await getDocs(collection(db,"items"));
  snap.forEach(d=>{
   let i=d.data();
-  itemTable.innerHTML+=`<tr><td>${i.cat}</td><td>${i.en}</td><td>${i.hi}</td><td class='delete' onclick="delItem('${d.id}')">❌</td></tr>`;
+  itemTable.innerHTML+=`<tr>
+   <td>${i.cat}</td>
+   <td>${i.en}</td>
+   <td>${i.hi}</td>
+   <td class='delete' onclick="delItem('${d.id}')">❌</td>
+  </tr>`;
  });
 }
 window.delItem=async id=>{
@@ -199,6 +204,7 @@ window.delItem=async id=>{
  loadItems();
 }
 
+/* ORDERS */
 async function loadOrders(){
  orderTable.innerHTML="";
  let snap=await getDocs(collection(db,"orders"));
@@ -232,15 +238,24 @@ async function loadAll(){
 <!-- ✅ AUTO ENGLISH → HINDI (ADDITION ONLY) -->
 <script>
 async function engToHindi(text, targetInputId) {
- if (!text) return;
- const url =
-  "https://inputtools.google.com/request?itc=hi-t-i0-und&num=1&text=" +
-  encodeURIComponent(text);
- const res = await fetch(url);
- const data = await res.json();
- if (data[0] === "SUCCESS") {
-  document.getElementById(targetInputId).value =
-   data[1][0][1][0];
+ if (!text.trim()) return;
+ try {
+  const res = await fetch("https://libretranslate.de/translate", {
+   method: "POST",
+   headers: {"Content-Type":"application/json"},
+   body: JSON.stringify({
+    q: text,
+    source: "en",
+    target: "hi",
+    format: "text"
+   })
+  });
+  const data = await res.json();
+  if (data.translatedText) {
+   document.getElementById(targetInputId).value = data.translatedText;
+  }
+ } catch(e){
+  console.log("Hindi conversion failed");
  }
 }
 </script>
