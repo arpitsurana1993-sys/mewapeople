@@ -23,6 +23,15 @@ button{
 table{width:100%;margin-top:10px;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
+
+/* SUCCESS POPUP */
+.popup{
+ display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+ background:rgba(0,0,0,.5);justify-content:center;align-items:center
+}
+.popup div{
+ background:#fff;padding:20px;border-radius:10px;text-align:center
+}
 </style>
 </head>
 
@@ -32,7 +41,8 @@ th{background:#e8f5e9}
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
 <label>Name *</label>
-<input id="custName">
+<input id="custName"
+ oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
 <label>Mobile *</label>
 <input id="custMobile" type="tel" inputmode="numeric"
@@ -79,12 +89,19 @@ th{background:#e8f5e9}
 
 </div>
 
-<!-- FIREBASE (NON-MODULE = MOST STABLE) -->
+<!-- SUCCESS POPUP -->
+<div class="popup" id="successPopup">
+ <div>
+  <h3>✅ Order Placed Successfully</h3>
+  <p>WhatsApp will open now</p>
+ </div>
+</div>
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ---------- FIREBASE CONFIG ---------- */
 firebase.initializeApp({
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
  authDomain: "mewapeople-25844.firebaseapp.com",
@@ -95,31 +112,29 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* ---------- VARIABLES ---------- */
-const category = document.getElementById("category");
-const item = document.getElementById("item");
-const cartTable = document.getElementById("cartTable");
-const deliveryType = document.getElementById("deliveryType");
+const category=document.getElementById("category");
+const item=document.getElementById("item");
+const cartTable=document.getElementById("cartTable");
+const deliveryType=document.getElementById("deliveryType");
 
-let allItems = [];
-let cart = [];
+let allItems=[],cart=[];
+let lastOrderKey=null; // 🔒 DUPLICATE LOCK
 
-/* ---------- LOAD DATA ---------- */
 async function loadData(){
- const catSnap = await db.collection("categories").get();
+ const cs=await db.collection("categories").get();
  category.innerHTML="";
- catSnap.forEach(d=>{
-  const c=d.data();
+ cs.forEach(d=>{
+  let c=d.data();
   category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
- const itemSnap = await db.collection("items").get();
- allItems = itemSnap.docs.map(d=>d.data());
+ const it=await db.collection("items").get();
+ allItems=it.docs.map(d=>d.data());
  loadItems();
 }
 loadData();
 
-category.onchange = loadItems;
+category.onchange=loadItems;
 
 function loadItems(){
  item.innerHTML="";
@@ -129,44 +144,33 @@ function loadItems(){
  });
 }
 
-/* ---------- CART ---------- */
-document.getElementById("addBtn").onclick = function(){
- const selected = allItems.find(i=>i.en===item.value);
- if(!selected) return;
-
- cart.push({
-  hi:selected.hi,
-  qty:document.getElementById("qty").value,
-  unit:document.getElementById("unit").value
- });
+addBtn.onclick=function(){
+ let s=allItems.find(i=>i.en===item.value);
+ if(!s)return;
+ cart.push({hi:s.hi,qty:qty.value,unit:unit.value});
  renderCart();
 };
 
 function renderCart(){
  cartTable.innerHTML="";
- cart.forEach((c,idx)=>{
+ cart.forEach((c,i)=>{
   cartTable.innerHTML+=`
-   <tr>
-    <td>${c.hi}</td>
-    <td>${c.qty} ${c.unit}</td>
-    <td style="cursor:pointer" onclick="removeItem(${idx})">❌</td>
-   </tr>`;
+  <tr>
+   <td>${c.hi}</td>
+   <td>${c.qty} ${c.unit}</td>
+   <td onclick="removeItem(${i})" style="cursor:pointer">❌</td>
+  </tr>`;
  });
 }
+window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
-function removeItem(i){
- cart.splice(i,1);
- renderCart();
-}
+orderBtn.onclick=async function(){
 
-/* ---------- PLACE ORDER ---------- */
-document.getElementById("orderBtn").onclick = async function(){
+ const name=custName.value.trim();
+ const mobile=custMobile.value.trim();
+ const address=custAddress.value.trim();
 
- const name = document.getElementById("custName").value.trim();
- const mobile = document.getElementById("custMobile").value.trim();
- const address = document.getElementById("custAddress").value.trim();
-
- if(!name || !mobile || !address){
+ if(!name||!mobile||!address){
   alert("Name, Mobile and Address are mandatory");
   return;
  }
@@ -176,36 +180,39 @@ document.getElementById("orderBtn").onclick = async function(){
   return;
  }
 
- const orderCode = "ORD" + Date.now();
- const time = new Date().toLocaleString();
+ const orderKey=name+mobile;
+ if(orderKey===lastOrderKey){
+  alert("Order already placed");
+  return;
+ }
+ lastOrderKey=orderKey; // 🔒 lock
 
- const itemsHindi = cart.map(
-  i=>`${i.hi} ${i.qty} ${i.unit}`
- ).join("\n");
+ const code="ORD"+Date.now();
+ const time=new Date().toLocaleString();
+ const itemsHindi=cart.map(i=>`${i.hi} ${i.qty} ${i.unit}`).join("\n");
 
- const msg =
-`ऑर्डर नंबर: ${orderCode}
+ await db.collection("orders").add({
+  code,name,mobile,address,
+  type:deliveryType.value,
+  items:itemsHindi,time
+ });
+
+ document.getElementById("successPopup").style.display="flex";
+
+ setTimeout(()=>{
+  window.location.href=
+  "https://wa.me/919462439993?text="+
+  encodeURIComponent(
+`ऑर्डर नंबर: ${code}
 नाम: ${name}
 मोबाइल: ${mobile}
 पता: ${address}
 डिलीवरी: ${deliveryType.value}
 
 सामान:
-${itemsHindi}`;
-
- /* SAVE TO FIREBASE */
- await db.collection("orders").add({
-  code: orderCode,
-  name, mobile, address,
-  type: deliveryType.value,
-  items: itemsHindi,
-  time
- });
-
- /* OPEN WHATSAPP */
- window.location.href =
-  "https://wa.me/919462439993?text=" +
-  encodeURIComponent(msg);
+${itemsHindi}`
+  );
+ },1200);
 
  cart=[];
  renderCart();
