@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - Surana Ashok Kumar Arvind Kumar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{font-family:Arial;background:#f1f8e9;margin:0;padding:15px}
+.container{max-width:1100px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+h1{text-align:center;color:#1b5e20}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+nav button{padding:10px 15px;border:none;border-radius:20px;background:#2e7d32;color:#fff;cursor:pointer}
+section{display:none}
+section.active{display:block}
+input,select{width:100%;padding:8px;margin-top:5px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+th{background:#e8f5e9}
+.delete{color:red;cursor:pointer}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
+
+<!-- LOGIN -->
+<section id="loginSection" class="active">
+<h3>Admin Login</h3>
+<input id="adminId" placeholder="Admin ID">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</section>
+
+<!-- MAIN -->
+<section id="mainSection">
+
+<nav>
+<button onclick="showTab('cred')">Change Login</button>
+<button onclick="showTab('cat')">Categories</button>
+<button onclick="showTab('item')">Items</button>
+<button onclick="showTab('orders')">Orders</button>
+</nav>
+
+<!-- CHANGE CREDENTIAL -->
+<section id="cred">
+<h3>Change Login Credentials</h3>
+<input id="newId" placeholder="New Admin ID">
+<input id="newPass" placeholder="New Password">
+<button onclick="changeCred()">Update</button>
+</section>
+
+<!-- CATEGORIES -->
+<section id="cat">
+<h3>Categories</h3>
+<input id="catEn" placeholder="Category (English)">
+<input id="catHi" placeholder="Category (Hindi)">
+<button onclick="addCategory()">Add</button>
+
+<table>
+<thead><tr><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
+<tbody id="catTable"></tbody>
+</table>
+</section>
+
+<!-- ITEMS -->
+<section id="item">
+<h3>Items</h3>
+<select id="catSelect"></select>
+<input id="itemEn" placeholder="Item (English)">
+<input id="itemHi" placeholder="Item (Hindi)">
+<button onclick="addItem()">Add</button>
+
+<table>
+<thead><tr><th>Category</th><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
+<tbody id="itemTable"></tbody>
+</table>
+</section>
+
+<!-- ORDERS -->
+<section id="orders">
+<h3>Orders</h3>
+<table>
+<thead>
+<tr>
+<th>Order No</th>
+<th>Name</th>
+<th>Mobile</th>
+<th>Address</th>
+<th>Type</th>
+<th>Items</th>
+<th>Time</th>
+<th>❌</th>
+</tr>
+</thead>
+<tbody id="orderTable"></tbody>
+</table>
+</section>
+
+</section>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+ apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
+ authDomain: "mewapeople-25844.firebaseapp.com",
+ projectId: "mewapeople-25844",
+ storageBucket: "mewapeople-25844.firebasestorage.app",
+ messagingSenderId: "53407017674",
+ appId: "1:53407017674:web:1667bb04862a76c02a6233"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* ---------- LOGIN ---------- */
+async function login(){
+ let snap = await getDoc(doc(db,"config","login"));
+ let data = snap.data();
+ if(adminId.value===data.id && adminPass.value===data.pass){
+  loginSection.style.display="none";
+  mainSection.style.display="block";
+  loadAll();
+ } else alert("Wrong login");
+}
+window.login=login;
+
+async function changeCred(){
+ await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
+ alert("Updated");
+}
+window.changeCred=changeCred;
+
+/* ---------- NAV ---------- */
+window.showTab=function(id){
+ document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+/* ---------- CATEGORY ---------- */
+window.addCategory=async function(){
+ await addDoc(collection(db,"categories"),{en:catEn.value,hi:catHi.value});
+ catEn.value=catHi.value="";
+ loadCategories();
+}
+
+/* ---------- ITEM ---------- */
+window.addItem=async function(){
+ await addDoc(collection(db,"items"),{
+  cat:catSelect.value,
+  en:itemEn.value,
+  hi:itemHi.value
+ });
+ itemEn.value=itemHi.value="";
+ loadItems();
+}
+
+/* ---------- LOAD ---------- */
+async function loadCategories(){
+ catTable.innerHTML="";
+ catSelect.innerHTML="";
+ let snap=await getDocs(collection(db,"categories"));
+ snap.forEach(d=>{
+  let c=d.data();
+  catTable.innerHTML+=`<tr><td>${c.en}</td><td>${c.hi}</td><td class='delete' onclick="delCat('${d.id}')">❌</td></tr>`;
+  catSelect.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+ });
+}
+window.delCat=async id=>{
+ await deleteDoc(doc(db,"categories",id));
+ loadCategories();
+}
+
+async function loadItems(){
+ itemTable.innerHTML="";
+ let snap=await getDocs(collection(db,"items"));
+ snap.forEach(d=>{
+  let i=d.data();
+  itemTable.innerHTML+=`<tr><td>${i.cat}</td><td>${i.en}</td><td>${i.hi}</td><td class='delete' onclick="delItem('${d.id}')">❌</td></tr>`;
+ });
+}
+window.delItem=async id=>{
+ await deleteDoc(doc(db,"items",id));
+ loadItems();
+}
+
+async function loadOrders(){
+ orderTable.innerHTML="";
+ let snap=await getDocs(collection(db,"orders"));
+ snap.forEach(d=>{
+  let o=d.data();
+  orderTable.innerHTML+=`<tr>
+<td>${o.code}</td>
+<td>${o.name}</td>
+<td>${o.mobile}</td>
+<td>${o.address}</td>
+<td>${o.type}</td>
+<td>${o.items}</td>
+<td>${o.time}</td>
+<td class='delete' onclick="delOrder('${d.id}')">❌</td>
+</tr>`;
+ });
+}
+window.delOrder=async id=>{
+ await deleteDoc(doc(db,"orders",id));
+ loadOrders();
+}
+
+async function loadAll(){
+ showTab('cat');
+ loadCategories();
+ loadItems();
+ loadOrders();
+}
+</script>
+
+</body>
+</html>

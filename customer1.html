@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Surana Ashok Kumar Arvind Kumar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{font-family:Arial;background:#e3f2fd;margin:0;padding:15px}
+.container{max-width:800px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+h1{text-align:center;color:#1b5e20}
+input,select,button{width:100%;padding:10px;margin-top:8px}
+button{background:#25d366;color:#fff;border:none;border-radius:25px;font-size:16px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:8px;text-align:center}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+<h1>🛒 Surana Ashok Kumar Arvind Kumar</h1>
+<p style="text-align:center">Mirchi Bazaar, Jodhpur | 📞 9462439993</p>
+
+<input id="name" placeholder="Name / नाम" required>
+<input id="mobile" placeholder="Mobile / मोबाइल" inputmode="numeric" pattern="[0-9]*" required>
+<input id="address" placeholder="Address / पता" required>
+
+<select id="type">
+<option>Home Delivery / होम डिलीवरी</option>
+<option>Pickup from Shop / दुकान से लें</option>
+</select>
+
+<select id="category" onchange="loadItems()"></select>
+<select id="item"></select>
+<input id="qty" placeholder="Quantity / मात्रा" inputmode="numeric" pattern="[0-9]*">
+
+<button onclick="add()">➕ Add Item</button>
+
+<table>
+<thead><tr><th>Item</th><th>Qty</th></tr></thead>
+<tbody id="list"></tbody>
+</table>
+
+<button onclick="place()">📲 Place Order on WhatsApp</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+const firebaseConfig = {
+ apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
+ authDomain: "mewapeople-25844.firebaseapp.com",
+ projectId: "mewapeople-25844",
+ storageBucket: "mewapeople-25844.firebasestorage.app",
+ messagingSenderId: "53407017674",
+ appId: "1:53407017674:web:1667bb04862a76c02a6233"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let cart=[];
+
+async function loadCategories(){
+ let snap=await getDocs(collection(db,"categories"));
+ category.innerHTML="";
+ snap.forEach(d=>{
+  let c=d.data();
+  category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+ });
+ loadItems();
+}
+window.loadItems=async function(){
+ let snap=await getDocs(collection(db,"items"));
+ item.innerHTML="";
+ snap.forEach(d=>{
+  let i=d.data();
+  if(i.cat===category.value){
+   item.innerHTML+=`<option>${i.en} / ${i.hi}</option>`;
+  }
+ });
+}
+window.add=function(){
+ if(!item.value||!qty.value)return alert("Enter item & quantity");
+ cart.push(`${item.value} x ${qty.value}`);
+ list.innerHTML+=`<tr><td>${item.value}</td><td>${qty.value}</td></tr>`;
+ qty.value="";
+}
+window.place=async function(){
+ if(!name.value||!mobile.value||!address.value)return alert("Fill all details");
+ let code="ORD"+Date.now();
+ let msg=`Order No: ${code}%0AName: ${name.value}%0AMobile: ${mobile.value}%0AAddress: ${address.value}%0AType: ${type.value}%0AItems:%0A${cart.join("%0A")}`;
+ await addDoc(collection(db,"orders"),{
+  code, name:name.value, mobile:mobile.value, address:address.value,
+  type:type.value, items:cart.join(", "), time:new Date().toLocaleString()
+ });
+ window.open(`https://wa.me/919462439993?text=${msg}`);
+ cart=[]; list.innerHTML="";
+}
+loadCategories();
+</script>
+
+</body>
+</html>
