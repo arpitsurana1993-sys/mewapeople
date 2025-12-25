@@ -79,7 +79,10 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 <tbody id="cart"></tbody>
 </table>
 
-<button type="button" id="orderBtn">Place Order & WhatsApp</button>
+<!-- 🔥 WHATSAPP SAFE LINK -->
+<a id="waLink" href="#">
+ <button type="button">Place Order & WhatsApp</button>
+</a>
 
 </div>
 
@@ -100,14 +103,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let categories=[], items=[], cartItems=[];
+let items=[], cartItems=[];
 
 /* LOAD DATA */
 async function loadAll(){
  const cs = await getDocs(collection(db,"categories"));
- categories = cs.docs.map(d=>d.data());
  cat.innerHTML="";
- categories.forEach(c=>{
+ cs.forEach(d=>{
+  let c=d.data();
   cat.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
@@ -129,9 +132,8 @@ function loadItems(){
 
 /* ADD ITEM */
 function addItem(){
- const i = items.find(x=>x.en===item.value);
+ let i = items.find(x=>x.en===item.value);
  cartItems.push({
-  en:i.en,
   hi:i.hi,
   qty:qty.value,
   unit:unit.value
@@ -145,7 +147,7 @@ function renderCart(){
  cartItems.forEach((c,idx)=>{
   cart.innerHTML+=`
   <tr>
-   <td>${c.en} / ${c.hi}</td>
+   <td>${c.hi}</td>
    <td>${c.qty} ${c.unit}</td>
    <td onclick="removeItem(${idx})">❌</td>
   </tr>`;
@@ -196,18 +198,20 @@ async function placeOrder(){
 सामान:
 ${itemsHindi}`;
 
- /* 🔥 THIS IS THE FIX */
- window.location.href =
-  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
+ const waURL =
+ `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
+
+ const link=document.getElementById("waLink");
+ link.href=waURL;
+ link.click();
 
  cartItems=[];
  renderCart();
 }
 
-/* BUTTON FIX */
-document.getElementById("addBtn").onclick = addItem;
-document.getElementById("orderBtn").onclick = placeOrder;
-
+/* BUTTONS */
+document.getElementById("addBtn").onclick=addItem;
+document.getElementById("waLink").onclick=placeOrder;
 </script>
 
 </body>
