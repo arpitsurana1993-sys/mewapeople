@@ -2,6 +2,50 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<title>Admin Login</title>
+
+<style>
+body{
+  font-family: Arial;
+  background:#f2f2f2;
+}
+#login{
+  max-width:350px;
+  margin:100px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:8px;
+}
+#admin{
+  display:none;
+}
+input,button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+}
+button{
+  background:#2c7be5;
+  color:#fff;
+  border:none;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login">
+  <h2>Admin Login</h2>
+  <input id="adminId" placeholder="Admin ID">
+  <input id="adminPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="admin">
+
+<!-- 🔽 PASTE YOUR OLD ADMIN PAGE CODE HERE 🔽 -->
+<meta charset="UTF-8">
 <title>Admin Panel - Surana Ashok Kumar Arvind Kumar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -221,6 +265,42 @@ async function loadAll(){
 }
 </script>
 
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
+  authDomain: "mewapeople-25844.firebaseapp.com",
+  projectId: "mewapeople-25844",
+  storageBucket: "mewapeople-25844.firebasestorage.app",
+  messagingSenderId: "53407017674",
+  appId: "1:53407017674:web:1667bb04862a76c02a6233"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+async function login(){
+  const snap = await getDoc(doc(db,"config","login"));
+  if(!snap.exists()){
+    alert("Login data missing");
+    return;
+  }
+  const data = snap.data();
+
+  if(adminId.value === data.id && adminPass.value === data.pass){
+    document.getElementById("login").style.display="none";
+    document.getElementById("admin").style.display="block";
+  }else{
+    alert("Wrong login");
+  }
+}
+window.login = login;
+</script>
+
 </body>
 </html>
-
