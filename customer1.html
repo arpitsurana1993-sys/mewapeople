@@ -79,10 +79,7 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 <tbody id="cart"></tbody>
 </table>
 
-<!-- WHATSAPP SAFE LINK -->
-<a id="waLink" href="#">
- <button type="button">Place Order & WhatsApp</button>
-</a>
+<button type="button" id="orderBtn">Place Order & WhatsApp</button>
 
 </div>
 
@@ -130,7 +127,6 @@ function loadItems(){
  });
 }
 
-/* ADD ITEM */
 function addItem(){
  let i = items.find(x=>x.en===item.value);
  cartItems.push({
@@ -141,7 +137,6 @@ function addItem(){
  renderCart();
 }
 
-/* CART */
 function renderCart(){
  cart.innerHTML="";
  cartItems.forEach((c,idx)=>{
@@ -158,10 +153,14 @@ window.removeItem=function(i){
  renderCart();
 }
 
-/* PLACE ORDER */
-async function placeOrder(){
+function placeOrder(){
 
- if(!name.value || !mobile.value || !address.value){
+ /* READ VALUES FIRST */
+ const custName = name.value.trim();
+ const custMobile = mobile.value.trim();
+ const custAddress = address.value.trim();
+
+ if(!custName || !custMobile || !custAddress){
   alert("Name, Mobile and Address are mandatory");
   return;
  }
@@ -178,43 +177,39 @@ async function placeOrder(){
   .map(i=>`${i.hi} ${i.qty} ${i.unit}`)
   .join("\n");
 
- await addDoc(collection(db,"orders"),{
-  code:orderCode,
-  name:name.value,
-  mobile:mobile.value,
-  address:address.value,
-  type:dtype.value,
-  items:itemsHindi,
-  time:time
- });
-
+ /* WHATSAPP FIRST (SYNC) */
  const msg =
 `ऑर्डर नंबर: ${orderCode}
-नाम: ${name.value}
-मोबाइल: ${mobile.value}
-पता: ${address.value}
+नाम: ${custName}
+मोबाइल: ${custMobile}
+पता: ${custAddress}
 डिलीवरी: ${dtype.value}
 
 सामान:
 ${itemsHindi}`;
 
- const waURL =
+ window.location.href =
   `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
 
- const link=document.getElementById("waLink");
- link.href=waURL;
- link.click();
+ /* FIREBASE SAVE (NO AWAIT) */
+ addDoc(collection(db,"orders"),{
+  code:orderCode,
+  name:custName,
+  mobile:custMobile,
+  address:custAddress,
+  type:dtype.value,
+  items:itemsHindi,
+  time:time
+ });
 
  cartItems=[];
  renderCart();
 }
 
-/* BUTTON FIX (IMPORTANT LINE) */
+/* BUTTONS */
 document.getElementById("addBtn").onclick = addItem;
-document.getElementById("waLink").onclick = function(e){
- e.preventDefault();   // 🔥 FIX
- placeOrder();
-};
+document.getElementById("orderBtn").onclick = placeOrder;
+
 </script>
 
 </body>
