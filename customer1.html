@@ -7,7 +7,7 @@
 
 <style>
 body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
-.container{max-width:700px;margin:auto;background:#fff;padding:15px;border-radius:12px}
+.container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
 h2{text-align:center;color:#1b5e20}
 label{font-weight:bold;margin-top:10px;display:block}
 input,select,textarea,button{
@@ -15,7 +15,7 @@ input,select,textarea,button{
 }
 .row{display:flex;gap:10px}
 .qty{width:100px}
-.unit{width:120px}
+.unit{width:140px}
 button{
  background:#2e7d32;color:#fff;border:none;border-radius:25px;
  margin-top:15px;cursor:pointer
@@ -32,17 +32,17 @@ th{background:#e8f5e9}
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
 <label>Name *</label>
-<input id="name">
+<input id="custName">
 
 <label>Mobile *</label>
-<input id="mobile" type="tel" inputmode="numeric"
+<input id="custMobile" type="tel" inputmode="numeric"
 oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <label>Address *</label>
-<textarea id="address"></textarea>
+<textarea id="custAddress"></textarea>
 
 <label>Delivery Type</label>
-<select id="dtype">
+<select id="deliveryType">
  <option>Home Delivery</option>
  <option>Pick from Shop</option>
 </select>
@@ -50,7 +50,7 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 <hr>
 
 <label>Category</label>
-<select id="cat"></select>
+<select id="category"></select>
 
 <label>Item</label>
 <select id="item"></select>
@@ -66,20 +66,16 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
  </select>
 </div>
 
-<button type="button" id="addBtn">Add Item</button>
+<button id="addBtn">Add Item</button>
 
 <table>
 <thead>
-<tr>
-<th>Item</th>
-<th>Qty</th>
-<th>❌</th>
-</tr>
+<tr><th>Item</th><th>Qty</th><th>❌</th></tr>
 </thead>
-<tbody id="cart"></tbody>
+<tbody id="cartTable"></tbody>
 </table>
 
-<button type="button" id="orderBtn">Place Order & WhatsApp</button>
+<button id="orderBtn">Place Order & WhatsApp</button>
 
 </div>
 
@@ -100,110 +96,124 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let items=[], cartItems=[];
+let allItems = [];
+let cart = [];
 
-async function loadAll(){
- const cs = await getDocs(collection(db,"categories"));
- cat.innerHTML="";
- cs.forEach(d=>{
+const category = document.getElementById("category");
+const item = document.getElementById("item");
+const cartTable = document.getElementById("cartTable");
+
+async function loadData(){
+ const catSnap = await getDocs(collection(db,"categories"));
+ category.innerHTML="";
+ catSnap.forEach(d=>{
   let c=d.data();
-  cat.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+  category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
- const it = await getDocs(collection(db,"items"));
- items = it.docs.map(d=>d.data());
+ const itemSnap = await getDocs(collection(db,"items"));
+ allItems = itemSnap.docs.map(d=>d.data());
  loadItems();
 }
-loadAll();
+loadData();
 
-cat.onchange = loadItems;
+category.addEventListener("change", loadItems);
 
 function loadItems(){
  item.innerHTML="";
- items.filter(i=>i.cat===cat.value)
+ allItems.filter(i=>i.cat===category.value)
  .forEach(i=>{
   item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
 }
 
 function addItem(){
- let i = items.find(x=>x.en===item.value);
- cartItems.push({
-  hi:i.hi,
-  qty:qty.value,
-  unit:unit.value
+ let selected = allItems.find(i=>i.en===item.value);
+ if(!selected) return;
+
+ cart.push({
+  hi:selected.hi,
+  qty:document.getElementById("qty").value,
+  unit:document.getElementById("unit").value
  });
  renderCart();
 }
 
 function renderCart(){
- cart.innerHTML="";
- cartItems.forEach((c,idx)=>{
-  cart.innerHTML+=`
-  <tr>
+ cartTable.innerHTML="";
+ cart.forEach((c,idx)=>{
+  let tr=document.createElement("tr");
+  tr.innerHTML=`
    <td>${c.hi}</td>
    <td>${c.qty} ${c.unit}</td>
-   <td onclick="removeItem(${idx})">❌</td>
-  </tr>`;
+   <td style="cursor:pointer">❌</td>
+  `;
+  tr.querySelector("td:last-child")
+    .addEventListener("click",()=>removeItem(idx));
+  cartTable.appendChild(tr);
  });
 }
-window.removeItem=function(i){
- cartItems.splice(i,1);
+
+function removeItem(i){
+ cart.splice(i,1);
  renderCart();
 }
 
-function placeOrder(){
+async function placeOrder(){
+ const name = document.getElementById("custName").value.trim();
+ const mobile = document.getElementById("custMobile").value.trim();
+ const address = document.getElementById("custAddress").value.trim();
 
- const custName = document.getElementById("name").value.trim();
- const custMobile = document.getElementById("mobile").value.trim();
- const custAddress = document.getElementById("address").value.trim();
-
- if(!custName || !custMobile || !custAddress){
+ if(!name || !mobile || !address){
   alert("Name, Mobile and Address are mandatory");
   return;
  }
 
- if(cartItems.length===0){
-  alert("Add at least one item");
+ if(cart.length===0){
+  alert("Please add at least one item");
   return;
  }
 
  const orderCode="ORD"+Date.now();
  const time=new Date().toLocaleString();
 
- const itemsHindi = cartItems
-  .map(i=>`${i.hi} ${i.qty} ${i.unit}`)
-  .join("\n");
+ const itemsHindi = cart.map(
+  i=>`${i.hi} ${i.qty} ${i.unit}`
+ ).join("\n");
 
  const msg =
 `ऑर्डर नंबर: ${orderCode}
-नाम: ${custName}
-मोबाइल: ${custMobile}
-पता: ${custAddress}
-डिलीवरी: ${dtype.value}
+नाम: ${name}
+मोबाइल: ${mobile}
+पता: ${address}
+डिलीवरी: ${deliveryType.value}
 
 सामान:
 ${itemsHindi}`;
 
  window.location.href =
-  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
+ `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
 
- addDoc(collection(db,"orders"),{
+ await addDoc(collection(db,"orders"),{
   code:orderCode,
-  name:custName,
-  mobile:custMobile,
-  address:custAddress,
-  type:dtype.value,
+  name:name,
+  mobile:mobile,
+  address:address,
+  type:deliveryType.value,
   items:itemsHindi,
   time:time
  });
 
- cartItems=[];
+ cart=[];
  renderCart();
 }
 
-document.getElementById("addBtn").onclick = addItem;
-document.getElementById("orderBtn").onclick = placeOrder;
+document.getElementById("addBtn")
+ .addEventListener("click", addItem);
+
+document.getElementById("orderBtn")
+ .addEventListener("click", placeOrder);
+
 </script>
 
 </body>
