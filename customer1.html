@@ -13,6 +13,9 @@ label{font-weight:bold;margin-top:10px;display:block}
 input,select,textarea,button{
  width:100%;padding:10px;margin-top:5px;font-size:16px
 }
+.row{display:flex;gap:10px}
+.qty{width:100px}
+.unit{width:120px}
 button{
  background:#2e7d32;color:#fff;border:none;border-radius:25px;
  margin-top:15px;cursor:pointer
@@ -20,7 +23,6 @@ button{
 table{width:100%;margin-top:10px;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
-.qty{width:60px}
 </style>
 </head>
 
@@ -33,7 +35,7 @@ th{background:#e8f5e9}
 <input id="name" required>
 
 <label>Mobile *</label>
-<input id="mobile" type="tel" inputmode="numeric" pattern="[0-9]*"
+<input id="mobile" type="tel" inputmode="numeric"
 oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
 
 <label>Address *</label>
@@ -54,9 +56,17 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
 <select id="item"></select>
 
 <label>Quantity</label>
-<input id="qty" type="number" min="1" value="1" class="qty">
+<div class="row">
+ <input id="qty" type="number" min="1" value="1" class="qty">
+ <select id="unit" class="unit">
+  <option value="किलो">Kg / किलो</option>
+  <option value="ग्राम">Gram / ग्राम</option>
+  <option value="पीस">Piece / पीस</option>
+  <option value="पैकेट">Packet / पैकेट</option>
+ </select>
+</div>
 
-<button onclick="addItem()">Add Item</button>
+<button id="addBtn">Add Item</button>
 
 <table>
 <thead>
@@ -69,11 +79,10 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')" required>
 <tbody id="cart"></tbody>
 </table>
 
-<button onclick="placeOrder()">Place Order & WhatsApp</button>
+<button id="orderBtn">Place Order & WhatsApp</button>
 
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc } from
@@ -101,7 +110,6 @@ async function loadAll(){
  categories.forEach(c=>{
   cat.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
- loadItems();
 
  let it = await getDocs(collection(db,"items"));
  items = it.docs.map(d=>d.data());
@@ -119,42 +127,41 @@ function loadItems(){
  });
 }
 
-/* CART */
-window.addItem=function(){
+/* ADD ITEM */
+function addItem(){
  let i = items.find(x=>x.en===item.value);
- cartItems.push({en:i.en, hi:i.hi, qty:qty.value});
+ cartItems.push({
+  en:i.en,
+  hi:i.hi,
+  qty:qty.value,
+  unit:unit.value
+ });
  renderCart();
 }
+window.addItem = addItem;
 
+/* CART */
 function renderCart(){
  cart.innerHTML="";
  cartItems.forEach((c,idx)=>{
   cart.innerHTML+=`
   <tr>
    <td>${c.en} / ${c.hi}</td>
-   <td>${c.qty}</td>
+   <td>${c.qty} ${c.unit}</td>
    <td onclick="removeItem(${idx})">❌</td>
   </tr>`;
  });
 }
-
 window.removeItem=function(i){
  cartItems.splice(i,1);
  renderCart();
 }
 
 /* PLACE ORDER */
-window.placeOrder=async function(){
+async function placeOrder(){
 
- if(name.value.trim()==="" ||
-    mobile.value.trim()==="" ||
-    address.value.trim()===""){
+ if(!name.value || !mobile.value || !address.value){
   alert("Name, Mobile and Address are mandatory");
-  return;
- }
-
- if(mobile.value.length<10){
-  alert("Enter valid mobile number");
   return;
  }
 
@@ -163,12 +170,12 @@ window.placeOrder=async function(){
   return;
  }
 
- let orderCode = "ORD"+Date.now();
- let time = new Date().toLocaleString();
+ let orderCode="ORD"+Date.now();
+ let time=new Date().toLocaleString();
 
  let itemsHindi = cartItems
-  .map(i=>`${i.hi} x ${i.qty}`)
-  .join(", ");
+  .map(i=>`${i.hi} ${i.qty} ${i.unit}`)
+  .join("\n");
 
  await addDoc(collection(db,"orders"),{
   code:orderCode,
@@ -181,24 +188,30 @@ window.placeOrder=async function(){
  });
 
  let msg =
- `Order No: ${orderCode}
-Name: ${name.value}
-Mobile: ${mobile.value}
-Address: ${address.value}
-Type: ${dtype.value}
+`ऑर्डर नंबर: ${orderCode}
+नाम: ${name.value}
+मोबाइल: ${mobile.value}
+पता: ${address.value}
+डिलीवरी: ${dtype.value}
 
-Items:
+सामान:
 ${itemsHindi}`;
 
  window.open(
- `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
- "_blank"
+  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
+  "_blank"
  );
 
- alert("Order Placed");
+ alert("Order Placed Successfully");
  cartItems=[];
  renderCart();
 }
+window.placeOrder = placeOrder;
+
+/* BUTTON BINDING (MOBILE FIX) */
+document.getElementById("addBtn").addEventListener("click", addItem);
+document.getElementById("orderBtn").addEventListener("click", placeOrder);
+
 </script>
 
 </body>
