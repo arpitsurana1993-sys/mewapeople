@@ -55,9 +55,8 @@ th{background:#e8f5e9}
 <!-- CATEGORIES -->
 <section id="cat">
 <h3>Categories</h3>
-<input id="catEn" placeholder="Category (English)"
- oninput="engToHindi(this.value,'catHi')">
-<input id="catHi" placeholder="Category (Hindi)">
+<input id="catEn" placeholder="Category (English)">
+<input id="catHi" placeholder="Category (Hindi – type English here)">
 <button onclick="addCategory()">Add</button>
 
 <table>
@@ -72,9 +71,8 @@ th{background:#e8f5e9}
 <section id="item">
 <h3>Items</h3>
 <select id="catSelect"></select>
-<input id="itemEn" placeholder="Item (English)"
- oninput="engToHindi(this.value,'itemHi')">
-<input id="itemHi" placeholder="Item (Hindi)">
+<input id="itemEn" placeholder="Item (English)">
+<input id="itemHi" placeholder="Item (Hindi – type English here)">
 <button onclick="addItem()">Add</button>
 
 <table>
@@ -108,7 +106,7 @@ th{background:#e8f5e9}
 </section>
 </div>
 
-<!-- FIREBASE + LOGIC (UNCHANGED) -->
+<!-- FIREBASE (UNCHANGED) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -235,29 +233,20 @@ async function loadAll(){
 }
 </script>
 
-<!-- ✅ AUTO ENGLISH → HINDI (ADDITION ONLY) -->
+<!-- ✅ GOOGLE PHONETIC HINDI TYPING (ADDITION ONLY) -->
+<script src="https://www.google.com/jsapi"></script>
 <script>
-async function engToHindi(text, targetInputId) {
- if (!text.trim()) return;
- try {
-  const res = await fetch("https://libretranslate.de/translate", {
-   method: "POST",
-   headers: {"Content-Type":"application/json"},
-   body: JSON.stringify({
-    q: text,
-    source: "en",
-    target: "hi",
-    format: "text"
-   })
-  });
-  const data = await res.json();
-  if (data.translatedText) {
-   document.getElementById(targetInputId).value = data.translatedText;
-  }
- } catch(e){
-  console.log("Hindi conversion failed");
- }
+google.load("elements", "1", { packages: "transliteration" });
+function onLoad() {
+ var options = {
+  sourceLanguage: 'en',
+  destinationLanguage: ['hi'],
+  transliterationEnabled: true
+ };
+ var control = new google.elements.transliteration.TransliterationControl(options);
+ control.makeTransliteratable(['catHi','itemHi']);
 }
+google.setOnLoadCallback(onLoad);
 </script>
 
 </body>
