@@ -102,7 +102,6 @@ const db = getFirestore(app);
 
 let items=[], cartItems=[];
 
-/* LOAD DATA */
 async function loadAll(){
  const cs = await getDocs(collection(db,"categories"));
  cat.innerHTML="";
@@ -155,10 +154,9 @@ window.removeItem=function(i){
 
 function placeOrder(){
 
- /* READ VALUES FIRST */
- const custName = name.value.trim();
- const custMobile = mobile.value.trim();
- const custAddress = address.value.trim();
+ const custName = document.getElementById("name").value.trim();
+ const custMobile = document.getElementById("mobile").value.trim();
+ const custAddress = document.getElementById("address").value.trim();
 
  if(!custName || !custMobile || !custAddress){
   alert("Name, Mobile and Address are mandatory");
@@ -177,7 +175,6 @@ function placeOrder(){
   .map(i=>`${i.hi} ${i.qty} ${i.unit}`)
   .join("\n");
 
- /* WHATSAPP FIRST (SYNC) */
  const msg =
 `ऑर्डर नंबर: ${orderCode}
 नाम: ${custName}
@@ -191,7 +188,6 @@ ${itemsHindi}`;
  window.location.href =
   `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
 
- /* FIREBASE SAVE (NO AWAIT) */
  addDoc(collection(db,"orders"),{
   code:orderCode,
   name:custName,
@@ -206,10 +202,8 @@ ${itemsHindi}`;
  renderCart();
 }
 
-/* BUTTONS */
 document.getElementById("addBtn").onclick = addItem;
 document.getElementById("orderBtn").onclick = placeOrder;
-
 </script>
 
 </body>
