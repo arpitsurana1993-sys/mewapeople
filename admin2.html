@@ -270,8 +270,13 @@ window.printOrder = function(orderStr) {
   var rows = '';
   for(var i=0; i<5; i++){
     if(itemsArr[i]){
-      var parts = itemsArr[i].split(' x');
-      rows += `<tr><td>${parts[0]||''}</td><td>${parts[1]||''}</td><td></td></tr>`;
+      // Try to split by last space or ' x' for quantity
+      var match = itemsArr[i].match(/^(.*?)(?:\s*[xX]\s*|\s+)(\d+)$/);
+      if(match){
+        rows += `<tr><td>${match[1].trim()}</td><td>${match[2]}</td><td></td></tr>`;
+      }else{
+        rows += `<tr><td>${itemsArr[i]}</td><td></td><td></td></tr>`;
+      }
     }else{
       rows += `<tr><td>________________________</td><td>__________</td><td></td></tr>`;
     }
