@@ -79,7 +79,7 @@ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 <tbody id="cart"></tbody>
 </table>
 
-<!-- 🔥 WHATSAPP SAFE LINK -->
+<!-- WHATSAPP SAFE LINK -->
 <a id="waLink" href="#">
  <button type="button">Place Order & WhatsApp</button>
 </a>
@@ -199,7 +199,7 @@ async function placeOrder(){
 ${itemsHindi}`;
 
  const waURL =
- `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
+  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`;
 
  const link=document.getElementById("waLink");
  link.href=waURL;
@@ -209,9 +209,12 @@ ${itemsHindi}`;
  renderCart();
 }
 
-/* BUTTONS */
-document.getElementById("addBtn").onclick=addItem;
-document.getElementById("waLink").onclick=placeOrder;
+/* BUTTON FIX (IMPORTANT LINE) */
+document.getElementById("addBtn").onclick = addItem;
+document.getElementById("waLink").onclick = function(e){
+ e.preventDefault();   // 🔥 FIX
+ placeOrder();
+};
 </script>
 
 </body>
