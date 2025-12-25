@@ -278,9 +278,11 @@ orders.sort((a, b) => {
   // If not valid dates, fallback to string compare (descending)
   return (b.time || "").localeCompare(a.time || "");
 });
-orders.forEach(o => {
+orders.forEach((o, idx) => {
+  // Serial number: MP101, MP102, ...
+  const serial = 'MP' + (101 + idx);
   orderTable.innerHTML += `<tr>
-<td>${o.code}</td>
+<td>${serial}</td>
 <td>${o.name}</td>
 <td>${o.mobile}</td>
 <td>${o.address}</td>
