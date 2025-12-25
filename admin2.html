@@ -2,50 +2,6 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Login</title>
-
-<style>
-body{
-  font-family: Arial;
-  background:#f2f2f2;
-}
-#login{
-  max-width:350px;
-  margin:100px auto;
-  background:#fff;
-  padding:20px;
-  border-radius:8px;
-}
-#admin{
-  display:none;
-}
-input,button{
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-}
-button{
-  background:#2c7be5;
-  color:#fff;
-  border:none;
-}
-</style>
-</head>
-<body>
-
-<!-- LOGIN PAGE -->
-<div id="login">
-  <h2>Admin Login</h2>
-  <input id="adminId" placeholder="Admin ID">
-  <input id="adminPass" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
-
-<!-- ADMIN PAGE -->
-<div id="admin">
-
-<!-- 🔽 PASTE YOUR OLD ADMIN PAGE CODE HERE 🔽 -->
-<meta charset="UTF-8">
 <title>Admin Panel - Surana Ashok Kumar Arvind Kumar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -57,18 +13,25 @@ nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
 nav button{padding:10px 15px;border:none;border-radius:20px;background:#2e7d32;color:#fff;cursor:pointer}
 section{display:none}
 section.active{display:block}
-input,select{width:100%;padding:8px;margin-top:5px}
+input,select{width:100%;padding:8px;margin-top:5px;font-size:16px}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #ccc;padding:8px;text-align:center}
 th{background:#e8f5e9}
 .delete{color:red;cursor:pointer}
-</style>
 
+/* ADDITION: Mobile dropdown fix */
+select{touch-action:manipulation}
+
+/* ADDITION: Logout button */
+.logout{
+  background:#c62828!important;
+}
+</style>
 </head>
+
 <body>
 
 <div class="container">
-
 <h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
 
 <!-- LOGIN -->
@@ -87,6 +50,7 @@ th{background:#e8f5e9}
 <button onclick="showTab('cat')">Categories</button>
 <button onclick="showTab('item')">Items</button>
 <button onclick="showTab('orders')">Orders</button>
+<button class="logout" onclick="logout()">Logout</button>
 </nav>
 
 <!-- CHANGE CREDENTIAL -->
@@ -127,6 +91,8 @@ th{background:#e8f5e9}
 <!-- ORDERS -->
 <section id="orders">
 <h3>Orders</h3>
+<button onclick="exportExcel()">⬇ Export Excel</button>
+
 <table>
 <thead>
 <tr>
@@ -164,11 +130,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+/* ADDITION: Session flag */
+let isLoggedIn=false;
+
 /* ---------- LOGIN ---------- */
 async function login(){
  let snap = await getDoc(doc(db,"config","login"));
  let data = snap.data();
  if(adminId.value===data.id && adminPass.value===data.pass){
+  isLoggedIn=true;
   loginSection.style.display="none";
   mainSection.style.display="block";
   loadAll();
@@ -176,17 +146,25 @@ async function login(){
 }
 window.login=login;
 
+/* ADDITION: LOGOUT */
+window.logout=function(){
+ isLoggedIn=false;
+ mainSection.style.display="none";
+ loginSection.style.display="block";
+}
+
+/* ---------- NAV (UNCHANGED LOGIC, SAFER SCOPE) ---------- */
+window.showTab=function(id){
+ document.querySelectorAll("#mainSection section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+}
+
+/* ---------- CHANGE CRED ---------- */
 async function changeCred(){
  await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
  alert("Updated");
 }
 window.changeCred=changeCred;
-
-/* ---------- NAV ---------- */
-window.showTab=function(id){
- document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
-}
 
 /* ---------- CATEGORY ---------- */
 window.addCategory=async function(){
@@ -263,43 +241,22 @@ async function loadAll(){
  loadItems();
  loadOrders();
 }
-</script>
 
-
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
-  authDomain: "mewapeople-25844.firebaseapp.com",
-  projectId: "mewapeople-25844",
-  storageBucket: "mewapeople-25844.firebasestorage.app",
-  messagingSenderId: "53407017674",
-  appId: "1:53407017674:web:1667bb04862a76c02a6233"
-};
-
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-async function login(){
-  const snap = await getDoc(doc(db,"config","login"));
-  if(!snap.exists()){
-    alert("Login data missing");
-    return;
-  }
-  const data = snap.data();
-
-  if(adminId.value === data.id && adminPass.value === data.pass){
-    document.getElementById("login").style.display="none";
-    document.getElementById("admin").style.display="block";
-  }else{
-    alert("Wrong login");
-  }
+/* ADDITION: EXCEL EXPORT */
+window.exportExcel=function(){
+ let rows=[["Order No","Name","Mobile","Address","Type","Items","Time"]];
+ document.querySelectorAll("#orderTable tr").forEach(r=>{
+  let row=[];
+  r.querySelectorAll("td").forEach((c,i)=>{if(i<7)row.push(c.innerText)});
+  rows.push(row);
+ });
+ let csv=rows.map(r=>r.join(",")).join("\n");
+ let blob=new Blob([csv],{type:"text/csv"});
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="orders.csv";
+ a.click();
 }
-window.login = login;
 </script>
 
 </body>
