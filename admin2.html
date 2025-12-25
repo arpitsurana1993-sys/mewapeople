@@ -262,18 +262,18 @@ window.printOrder = function(orderStr) {
   document.getElementById('pAddress').textContent = o.address || '';
   document.getElementById('pMobile').textContent = o.mobile || '';
   document.getElementById('pType').textContent = o.type || '';
-  // Items parsing: expects o.items as string, e.g. "item1 x2, item2 x3"
+  // Items parsing: expects o.items as string, e.g. "item1 2 किलो\nitem2 1 पैकेट"
   var itemsArr = [];
   if(o.items){
-    itemsArr = o.items.split(',').map(x => x.trim()).filter(x => x);
+    itemsArr = o.items.split('\n').map(x => x.trim()).filter(x => x);
   }
   var rows = '';
   for(var i=0; i<5; i++){
     if(itemsArr[i]){
-      // Try to split by last space or ' x' for quantity
-      var match = itemsArr[i].match(/^(.*?)(?:\s*[xX]\s*|\s+)(\d+)$/);
+      // Try to split by last two space-separated parts (qty and unit)
+      var match = itemsArr[i].match(/^(.*)\s(\d+)\s([^\s]+)$/);
       if(match){
-        rows += `<tr><td>${match[1].trim()}</td><td>${match[2]}</td><td></td></tr>`;
+        rows += `<tr><td>${match[1].trim()}</td><td>${match[2]} ${match[3]}</td><td></td></tr>`;
       }else{
         rows += `<tr><td>${itemsArr[i]}</td><td></td><td></td></tr>`;
       }
