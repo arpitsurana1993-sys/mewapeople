@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mewa People</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <h2>Welcome</h2>
+  <p>
+    <a href="customer1.html">Go to Customer Page</a>
+  </p>
+  <p>
+    <a href="admin2.html">Go to Admin Page</a>
+  </p>
+</body>
+</html>
