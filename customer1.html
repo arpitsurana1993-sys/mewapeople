@@ -109,7 +109,7 @@ async function loadData(){
 }
 loadData();
 
-/* MOBILE SAFE CATEGORY LOAD */
+/* CATEGORY + ITEM (MOBILE SAFE) */
 function renderCategories(){
  category.innerHTML="";
  Object.keys(categories).forEach(c=>{
@@ -132,10 +132,17 @@ function renderItems(){
  });
 }
 
-/* CART */
+/* CART (STORE HINDI SEPARATELY) */
 window.addItem=function(){
- if(!item.value || !qty.value){alert("Select item & quantity");return;}
- cart.push({name:item.options[item.selectedIndex].text,qty:qty.value});
+ if(!item.value || !qty.value){
+  alert("Select item & quantity");
+  return;
+ }
+ cart.push({
+  en: item.value,
+  hi: item.options[item.selectedIndex].text.split("/")[1].trim(),
+  qty: qty.value
+ });
  renderCart();
  qty.value="";
 }
@@ -144,7 +151,7 @@ function renderCart(){
  cartTable.innerHTML="";
  cart.forEach((c,i)=>{
   cartTable.innerHTML+=`<tr>
-   <td>${c.name}</td>
+   <td>${c.en} / ${c.hi}</td>
    <td>${c.qty}</td>
    <td class="delete" onclick="del(${i})">❌</td>
   </tr>`;
@@ -167,9 +174,12 @@ window.placeOrder=async function(){
  let time=new Date().toLocaleString();
 
  await addDoc(collection(db,"orders"),{
-  code,name:name.value,mobile:mobile.value,
-  address:address.value,type:type.value,
-  items:cart.map(c=>`${c.name} x ${c.qty}`).join(", "),
+  code,
+  name:name.value,
+  mobile:mobile.value,
+  address:address.value,
+  type:type.value,
+  items:cart.map(c=>`${c.hi} x ${c.qty}`).join(", "),
   time
  });
 
@@ -181,13 +191,30 @@ Type: ${type.value}
 
 Items:
 `;
- cart.forEach(c=>msg+=`${c.name} x ${c.qty}\n`);
+ cart.forEach(c=>msg+=`${c.hi} x ${c.qty}\n`);
 
- window.open(`https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,"_blank");
+ window.open(
+  `https://wa.me/919462439993?text=${encodeURIComponent(msg)}`,
+  "_blank"
+ );
 
  alert("Order placed successfully");
  cart=[];renderCart();
 }
+</script>
+
+<!-- ✅ HINDI TYPING FOR ADDRESS (LOW HASSLE) -->
+<script src="https://www.google.com/jsapi"></script>
+<script>
+google.load("elements", "1", { packages: "transliteration" });
+google.setOnLoadCallback(function () {
+ var control = new google.elements.transliteration.TransliterationControl({
+  sourceLanguage: 'en',
+  destinationLanguage: ['hi'],
+  transliterationEnabled: true
+ });
+ control.makeTransliteratable(['address']);
+});
 </script>
 
 </body>
