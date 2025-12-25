@@ -147,12 +147,12 @@ function loadItems(){
 addBtn.onclick=function(){
  let s=allItems.find(i=>i.en===item.value);
  if(!s)return;
- // Prevent duplicate items
- if(cart.some(c => c.hi === s.hi)) {
+ // Prevent duplicate items by both en and hi
+ if(cart.some(c => c.hi === s.hi || c.en === s.en)) {
    alert("Item already added!");
    return;
  }
- cart.push({hi:s.hi,qty:qty.value,unit:unit.value});
+ cart.push({en:s.en, hi:s.hi, qty:qty.value, unit:unit.value});
  renderCart();
 };
 
