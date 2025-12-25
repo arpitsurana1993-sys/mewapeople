@@ -261,11 +261,25 @@ window.delItem=async id=>{
 
 /* ORDERS */
 async function loadOrders(){
- orderTable.innerHTML="";
- let snap=await getDocs(collection(db,"orders"));
- snap.forEach(d=>{
-  let o=d.data();
-  orderTable.innerHTML+=`<tr>
+orderTable.innerHTML = "";
+let snap = await getDocs(collection(db, "orders"));
+let orders = [];
+snap.forEach(d => {
+  let o = d.data();
+  o._id = d.id;
+  orders.push(o);
+});
+// Sort orders by time (latest first)
+orders.sort((a, b) => {
+  // Try to parse as date, fallback to string compare
+  let ta = Date.parse(a.time);
+  let tb = Date.parse(b.time);
+  if (!isNaN(ta) && !isNaN(tb)) return tb - ta;
+  // If not valid dates, fallback to string compare (descending)
+  return (b.time || "").localeCompare(a.time || "");
+});
+orders.forEach(o => {
+  orderTable.innerHTML += `<tr>
 <td>${o.code}</td>
 <td>${o.name}</td>
 <td>${o.mobile}</td>
@@ -273,10 +287,10 @@ async function loadOrders(){
 <td>${o.type}</td>
 <td>${o.items}</td>
 <td>${o.time}</td>
-<td class='delete' onclick="delOrder('${d.id}')">❌</td>
+<td class='delete' onclick="delOrder('${o._id}')">❌</td>
 <td><button style='padding:6px 12px;font-size:15px;background:#1976d2;color:#fff;border:none;border-radius:5px;cursor:pointer' onclick="printOrder('${encodeURIComponent(JSON.stringify(o))}')">🖨️ Print</button></td>
 </tr>`;
- });
+});
 }
 
 window.printOrder = function(orderStr) {
