@@ -57,7 +57,7 @@ th{background:#e8f5e9}
 
 <label>Quantity</label>
 <div class="row">
- <select id="qty"></select>
+ <input id="qty" type="number" min="1">
  <select id="unit"></select>
  <input id="packetCount" type="number" min="1" value="1"
   style="width:90px" placeholder="Packets">
@@ -129,7 +129,7 @@ function loadItems(){
 
 item.onchange=loadQtyUnit;
 
-/* ✅ ONLY CHANGE IS HERE */
+/* ✅ ONLY REQUIRED CHANGE */
 function loadQtyUnit(){
  const i=items.find(x=>x.en===item.value);
  if(!i)return;
@@ -139,10 +139,9 @@ function loadQtyUnit(){
   unit.innerHTML+=`<option value="${u}">${u}</option>`;
  });
 
- qty.innerHTML="";
- (i.qty || []).forEach(q=>{
-  qty.innerHTML+=`<option value="${q}">${q}</option>`;
- });
+ qty.value = i.minQty || 1;
+ qty.min   = i.minQty || 1;
+ qty.max   = i.maxQty || 9999;
 }
 
 /* ADD ITEM */
@@ -150,15 +149,17 @@ addBtn.onclick=function(){
  const i=items.find(x=>x.en===item.value);
  if(!i)return;
 
- const q=qty.value;
- const u=unit.value;
- const p=packetCount.value;
+ const q=Number(qty.value);
+ if(q < qty.min || q > qty.max){
+  alert(`Quantity must be between ${qty.min} and ${qty.max}`);
+  return;
+ }
 
  cart.push({
   hi:i.hi,
   qty:q,
-  unit:u,
-  packets:p
+  unit:unit.value,
+  packets:packetCount.value
  });
  renderCart();
 };
