@@ -23,26 +23,20 @@ th{background:#e8f5e9}
 <div class="container">
 
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
-<div style="text-align:center; font-size:18px; margin-bottom:10px;"> 
-  <!-- GOOGLE MAP / LOCATION --> 
-   <a href="https://maps.app.goo.gl/exwWju9MgBr5epFV6" 
-   target="_blank" style="display:inline-block;margin-top:5px; 
-   text-decoration:none;color:#0d47a1;font-size:16px;"> 📍 Mirchi Bazar </a> 
-   
-   <!-- CALL ACTION --> 
-    <a href="tel:9462439993" style="display:inline-block;margin:5px 0; 
-    text-decoration:none;color:#1b5e20;font-size:17px;font-weight:bold;"> 📞 9462439993 </a> 
-    <br> 
-  </div>
 
-<label>Name / नाम *</label>
+<div style="text-align:center;margin-bottom:10px">
+ <a href="https://maps.app.goo.gl/exwWju9MgBr5epFV6" target="_blank">📍 Mirchi Bazar</a><br>
+ <a href="tel:9462439993">📞 9462439993</a>
+</div>
+
+<label>Name *</label>
 <input id="custName" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
-<label>Mobile / मोबाइल *</label>
+<label>Mobile *</label>
 <input id="custMobile" inputmode="numeric"
  oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
-<label>Address / पता *</label>
+<label>Address *</label>
 <textarea id="custAddress"></textarea>
 
 <label>Delivery Type</label>
@@ -61,8 +55,8 @@ th{background:#e8f5e9}
 
 <label>Quantity</label>
 <div class="row">
- <select id="qty"></select>
- <select id="unit" disabled></select>
+ <input id="qty" type="number" min="1" value="1" style="width:110px">
+ <select id="unit" style="width:130px"></select>
  <input id="packetCount" type="number" min="1" value="1" style="width:90px" placeholder="Packets">
 </div>
 
@@ -70,7 +64,12 @@ th{background:#e8f5e9}
 
 <table>
 <thead>
-<tr><th>Item</th><th>Qty</th><th>Packets</th><th>❌</th></tr>
+<tr>
+ <th>Item</th>
+ <th>Qty</th>
+ <th>Packets</th>
+ <th>❌</th>
+</tr>
 </thead>
 <tbody id="cartTable"></tbody>
 </table>
@@ -92,35 +91,37 @@ firebase.initializeApp({
  messagingSenderId: "53407017674",
  appId: "1:53407017674:web:1667bb04862a76c02a6233"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-const category=document.getElementById("category");
-const item=document.getElementById("item");
-const qty=document.getElementById("qty");
-const unit=document.getElementById("unit");
-const packetCount=document.getElementById("packetCount");
-const cartTable=document.getElementById("cartTable");
+const category = document.getElementById("category");
+const item = document.getElementById("item");
+const qty = document.getElementById("qty");
+const unit = document.getElementById("unit");
+const packetCount = document.getElementById("packetCount");
+const cartTable = document.getElementById("cartTable");
 
-let items=[],cart=[];
+let items = [], cart = [];
 
 /* LOAD DATA */
 async function loadData(){
- const cs=await db.collection("categories").get();
- category.innerHTML="";
+ const cs = await db.collection("categories").get();
+ category.innerHTML = "";
  cs.forEach(d=>{
   let c=d.data();
   category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
- const it=await db.collection("items").get();
- items=it.docs.map(d=>d.data());
+ const it = await db.collection("items").get();
+ items = it.docs.map(d=>d.data());
 
  loadItems();
 }
 loadData();
 
-category.onchange=loadItems;
+category.onchange = loadItems;
+item.onchange = loadQtyUnit;
 
+/* LOAD ITEMS */
 function loadItems(){
  item.innerHTML="";
  items.filter(i=>i.cat===category.value)
@@ -130,33 +131,38 @@ function loadItems(){
  loadQtyUnit();
 }
 
-item.onchange=loadQtyUnit;
-
-/* LOAD QTY + UNIT BASED ON ITEM */
+/* LOAD UNIT + QTY LIMIT */
 function loadQtyUnit(){
- const i=items.find(x=>x.en===item.value);
+ const i = items.find(x=>x.en===item.value);
  if(!i)return;
 
- unit.innerHTML=`<option>${i.unit}</option>`;
- qty.innerHTML="";
- (i.qty||[]).forEach(q=>{
-  qty.innerHTML+=`<option value="${q}">${q}</option>`;
+ unit.innerHTML="";
+ (i.units || []).forEach(u=>{
+  const map={kg:"किलो",gm:"ग्राम",packet:"पैकेट",piece:"पीस"};
+  unit.innerHTML+=`<option value="${u}">${map[u]}</option>`;
  });
+
+ qty.min = i.minQty || 1;
+ qty.max = i.maxQty || 999;
+ qty.value = i.minQty || 1;
 }
 
 /* ADD ITEM */
-addBtn.onclick=function(){
- const i=items.find(x=>x.en===item.value);
+addBtn.onclick = function(){
+ const i = items.find(x=>x.en===item.value);
  if(!i)return;
 
- const q=qty.value;
- const p=packetCount.value;
+ const q = Number(qty.value);
+ if(q < i.minQty || q > i.maxQty){
+  alert(`Quantity must be between ${i.minQty} and ${i.maxQty}`);
+  return;
+ }
 
  cart.push({
-  hi:i.hi,
-  qty:q,
-  unit:i.unit,
-  packets:p
+  hi: i.hi,
+  qty: q,
+  unit: unit.value,
+  packets: packetCount.value
  });
  renderCart();
 };
@@ -165,23 +171,19 @@ function renderCart(){
  cartTable.innerHTML="";
  cart.forEach((c,i)=>{
   cartTable.innerHTML+=`
-   <tr>
-    <td>${c.hi}</td>
-    <td>${c.qty} ${c.unit}</td>
-    <td>${c.packets}</td>
-    <td onclick="removeItem(${i})">❌</td>
-   </tr>`;
+  <tr>
+   <td>${c.hi}</td>
+   <td>${c.qty} ${c.unit}</td>
+   <td>${c.packets}</td>
+   <td onclick="removeItem(${i})">❌</td>
+  </tr>`;
  });
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
 /* PLACE ORDER */
-orderBtn.onclick=async function(){
- const name=custName.value.trim();
- const mobile=custMobile.value.trim();
- const address=custAddress.value.trim();
-
- if(!name||!mobile||!address){
+orderBtn.onclick = async function(){
+ if(!custName.value||!custMobile.value||!custAddress.value){
   alert("All fields are mandatory");
   return;
  }
@@ -192,23 +194,28 @@ orderBtn.onclick=async function(){
 
  const code="ORD"+Date.now();
  const time=new Date().toLocaleString();
- const itemsText=cart
+
+ const itemsText = cart
   .map(i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`)
   .join("\n");
 
  await db.collection("orders").add({
-  code,name,mobile,address,
+  code,
+  name:custName.value,
+  mobile:custMobile.value,
+  address:custAddress.value,
   type:deliveryType.value,
-  items:itemsText,time
+  items:itemsText,
+  time
  });
 
- window.location.href=
+ window.location.href =
  "https://wa.me/919462439993?text="+
  encodeURIComponent(
 `ऑर्डर नंबर: ${code}
-नाम: ${name}
-मोबाइल: ${mobile}
-पता: ${address}
+नाम: ${custName.value}
+मोबाइल: ${custMobile.value}
+पता: ${custAddress.value}
 डिलीवरी: ${deliveryType.value}
 
 सामान:
