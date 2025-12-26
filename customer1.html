@@ -14,8 +14,9 @@ input,select,textarea,button{
  width:100%;padding:10px;margin-top:5px;font-size:16px
 }
 .row{display:flex;gap:10px}
-.qty{width:100px}
-.unit{width:140px}
+.qty{width:90px}
+.unit{width:120px}
+.packets{width:120px}
 button{
  background:#2e7d32;color:#fff;border:none;border-radius:25px;
  margin-top:15px;cursor:pointer
@@ -24,7 +25,6 @@ table{width:100%;margin-top:10px;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
 
-/* SUCCESS POPUP */
 .popup{
  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
  background:rgba(0,0,0,.5);justify-content:center;align-items:center
@@ -38,35 +38,14 @@ th{background:#e8f5e9}
 <body>
 <div class="container">
 
-
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
-<div style="text-align:center; font-size:18px; margin-bottom:10px;">
-   <!-- GOOGLE MAP / LOCATION -->
-  <a href="https://maps.app.goo.gl/exwWju9MgBr5epFV6"
-     target="_blank"
-     style="display:inline-block;margin-top:5px;
-     text-decoration:none;color:#0d47a1;font-size:16px;">
-     📍 Mirchi Bazar
-  </a>
-
-  <!-- CALL ACTION -->
-  <a href="tel:9462439993"
-     style="display:inline-block;margin:5px 0;
-     text-decoration:none;color:#1b5e20;font-size:17px;font-weight:bold;">
-     📞  9462439993
-  </a>
-  <br>
-
- 
-</div>
-
 
 <label>Name / नाम *</label>
 <input id="custName"
  oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
-<label>Mobile no / मोबाइल नंबर*</label>
-<input id="custMobile" type="tel" inputmode="numeric"
+<label>Mobile no / मोबाइल नंबर *</label>
+<input id="custMobile"
  oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <label>Address / पता *</label>
@@ -80,7 +59,7 @@ th{background:#e8f5e9}
 
 <hr>
 
-<label>Category/ वर्ग</label>
+<label>Category / वर्ग</label>
 <select id="category"></select>
 
 <label>Item / सामग्री</label>
@@ -88,29 +67,34 @@ th{background:#e8f5e9}
 
 <label>Quantity / मात्रा</label>
 <div class="row">
- <input id="qty" type="number" min="1" value="1" class="qty">
+ <input id="qty" type="number" min="0.01" step="0.01" value="1" class="qty">
  <select id="unit" class="unit">
   <option value="किलो">Kg / किलो</option>
   <option value="ग्राम">Gram / ग्राम</option>
   <option value="पीस">Piece / पीस</option>
   <option value="पैकेट">Packet / पैकेट</option>
  </select>
+ <input id="packetCount" type="number" min="1" value="1" class="packets"
+  placeholder="Packets">
 </div>
 
 <button id="addBtn">Add Item</button>
 
 <table>
 <thead>
-<tr><th>Item</th><th>Qty</th><th>❌</th></tr>
+<tr>
+ <th>Item</th>
+ <th>Qty</th>
+ <th>Packets</th>
+ <th>❌</th>
+</tr>
 </thead>
 <tbody id="cartTable"></tbody>
 </table>
 
 <button id="orderBtn">Place Order & WhatsApp</button>
-
 </div>
 
-<!-- SUCCESS POPUP -->
 <div class="popup" id="successPopup">
  <div>
   <h3>✅ Order Placed Successfully</h3>
@@ -118,7 +102,6 @@ th{background:#e8f5e9}
  </div>
 </div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -126,20 +109,15 @@ th{background:#e8f5e9}
 firebase.initializeApp({
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
  authDomain: "mewapeople-25844.firebaseapp.com",
- projectId: "mewapeople-25844",
- storageBucket: "mewapeople-25844.firebasestorage.app",
- messagingSenderId: "53407017674",
- appId: "1:53407017674:web:1667bb04862a76c02a6233"
+ projectId: "mewapeople-25844"
 });
-const db = firebase.firestore();
+const db=firebase.firestore();
 
 const category=document.getElementById("category");
 const item=document.getElementById("item");
 const cartTable=document.getElementById("cartTable");
-const deliveryType=document.getElementById("deliveryType");
 
-let allItems=[],cart=[];
-let lastOrderKey=null; // 🔒 DUPLICATE LOCK
+let allItems=[],cart=[],lastOrderKey=null;
 
 async function loadData(){
  const cs=await db.collection("categories").get();
@@ -168,12 +146,19 @@ function loadItems(){
 addBtn.onclick=function(){
  let s=allItems.find(i=>i.en===item.value);
  if(!s)return;
- // Prevent duplicate items by both en and hi
- if(cart.some(c => c.hi === s.hi || c.en === s.en)) {
-   alert("Item already added!");
-   return;
+
+ if(cart.some(c=>c.en===s.en)){
+  alert("Item already added");
+  return;
  }
- cart.push({en:s.en, hi:s.hi, qty:qty.value, unit:unit.value});
+
+ cart.push({
+  en:s.en,
+  hi:s.hi,
+  qty:qty.value,
+  unit:unit.value,
+  packets:packetCount.value
+ });
  renderCart();
 };
 
@@ -184,14 +169,14 @@ function renderCart(){
   <tr>
    <td>${c.hi}</td>
    <td>${c.qty} ${c.unit}</td>
-   <td onclick="removeItem(${i})" style="cursor:pointer">❌</td>
+   <td>${c.packets}</td>
+   <td onclick="removeItem(${i})">❌</td>
   </tr>`;
  });
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
 orderBtn.onclick=async function(){
-
  const name=custName.value.trim();
  const mobile=custMobile.value.trim();
  const address=custAddress.value.trim();
@@ -200,22 +185,20 @@ orderBtn.onclick=async function(){
   alert("Name, Mobile and Address are mandatory");
   return;
  }
-
  if(cart.length===0){
-  alert("Please add at least one item");
+  alert("Please add item");
   return;
  }
 
- const orderKey=name+mobile;
- if(orderKey===lastOrderKey){
-  alert("Order already placed");
-  return;
- }
- lastOrderKey=orderKey; // 🔒 lock
+ const key=name+mobile;
+ if(key===lastOrderKey)return;
+ lastOrderKey=key;
 
  const code="ORD"+Date.now();
  const time=new Date().toLocaleString();
- const itemsHindi=cart.map(i=>`${i.hi} ${i.qty} ${i.unit}`).join("\n");
+ const itemsHindi=cart.map(
+  i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`
+ ).join("\n");
 
  await db.collection("orders").add({
   code,name,mobile,address,
@@ -223,12 +206,11 @@ orderBtn.onclick=async function(){
   items:itemsHindi,time
  });
 
- document.getElementById("successPopup").style.display="flex";
+ successPopup.style.display="flex";
 
  setTimeout(()=>{
-  window.location.href=
-  "https://wa.me/919462439993?text="+
-  encodeURIComponent(
+  window.open(
+   "https://wa.me/919462439993?text="+encodeURIComponent(
 `ऑर्डर नंबर: ${code}
 नाम: ${name}
 मोबाइल: ${mobile}
@@ -237,14 +219,11 @@ orderBtn.onclick=async function(){
 
 सामान:
 ${itemsHindi}`
-  );
- },1200);
+   ),"_blank");
+ },1000);
 
- cart=[];
- renderCart();
+ cart=[];renderCart();
 };
 </script>
-
 </body>
 </html>
-
