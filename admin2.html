@@ -1,4 +1,3 @@
-<!-- Version: 1.0.1 | Updated: 2025-12-26 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,12 +24,7 @@ th{background:#e8f5e9}
 <body>
 <div class="container">
 
-<div style="display:flex;justify-content:space-between;align-items:center;">
-  <h1 style="margin:0">🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
-  <button id="refreshOrdersBtn"
-   style="padding:10px 18px;border:none;border-radius:20px;
-   background:#1976d2;color:#fff;cursor:pointer;font-size:16px;">🔄</button>
-</div>
+<h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
 
 <!-- LOGIN -->
 <section id="loginSection" class="active">
@@ -50,7 +44,7 @@ th{background:#e8f5e9}
 <button onclick="showTab('orders')">Orders</button>
 </nav>
 
-<!-- CHANGE CREDENTIAL -->
+<!-- CHANGE LOGIN -->
 <section id="cred">
 <h3>Change Login Credentials</h3>
 <input id="newId" placeholder="New Admin ID">
@@ -66,9 +60,7 @@ th{background:#e8f5e9}
 <button onclick="addCategory()">Add</button>
 
 <table>
-<thead>
-<tr><th>English</th><th>Hindi</th><th>❌</th></tr>
-</thead>
+<thead><tr><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
 <tbody id="catTable"></tbody>
 </table>
 </section>
@@ -76,14 +68,39 @@ th{background:#e8f5e9}
 <!-- ITEMS -->
 <section id="item">
 <h3>Items</h3>
+
+<label>Category</label>
 <select id="catSelect"></select>
-<input id="itemEn" placeholder="Item (English)">
-<input id="itemHi" placeholder="Item (Hindi – type English)">
-<button onclick="addItem()">Add</button>
+
+<label>Item (English)</label>
+<input id="itemEn">
+
+<label>Item (Hindi – type English)</label>
+<input id="itemHi">
+
+<label>Allowed Unit</label>
+<select id="allowedUnit">
+  <option value="kg">Kg / किलो</option>
+  <option value="gm">Gram / ग्राम</option>
+  <option value="packet">Packet / पैकेट</option>
+  <option value="piece">Piece / पीस</option>
+</select>
+
+<label>Allowed Quantities (comma separated)</label>
+<input id="allowedQty" placeholder="250,500,750,1000">
+
+<button onclick="addItem()">Add Item</button>
 
 <table>
 <thead>
-<tr><th>Category</th><th>English</th><th>Hindi</th><th>❌</th></tr>
+<tr>
+<th>Category</th>
+<th>English</th>
+<th>Hindi</th>
+<th>Unit</th>
+<th>Qty Options</th>
+<th>❌</th>
+</tr>
 </thead>
 <tbody id="itemTable"></tbody>
 </table>
@@ -103,56 +120,19 @@ th{background:#e8f5e9}
 <th>Items</th>
 <th>Time</th>
 <th>❌</th>
-<th>Print</th>
 </tr>
 </thead>
 <tbody id="orderTable"></tbody>
 </table>
-
-<!-- PRINT AREA -->
-<div id="printOrder"
- style="width:700px;margin:auto;border:1px solid #ccc;
- padding:20px;background:#fff;display:none">
-
-<h2>Order Details</h2>
-<p><strong>Name:</strong> <span id="pName"></span></p>
-<p><strong>Address:</strong> <span id="pAddress"></span></p>
-<p><strong>Phone:</strong> <span id="pMobile"></span></p>
-<p><strong>Delivery:</strong> <span id="pType"></span></p>
-
-<table border="1" cellspacing="0" cellpadding="8"
- style="width:100%;border-collapse:collapse">
-<thead>
-<tr>
-<th>Item</th>
-<th>Quantity</th>
-<th>Packets</th>
-<th>Price</th>
-</tr>
-</thead>
-<tbody id="pItems"></tbody>
-</table>
-</div>
-
-<style>
-@media print{
- body *{visibility:hidden}
- #printOrder,#printOrder *{visibility:visible}
- #printOrder{position:absolute;left:0;top:0;width:100%}
-}
-</style>
-
 </section>
+
 </section>
 </div>
 
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
- getFirestore, collection, addDoc, getDocs,
- deleteDoc, doc, setDoc, getDoc
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
@@ -167,38 +147,30 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* LOGIN */
-window.login = async () => {
+window.login = async function(){
  let snap = await getDoc(doc(db,"config","login"));
- let d = snap.data();
- if(adminId.value===d.id && adminPass.value===d.pass){
+ let data = snap.data();
+ if(adminId.value===data.id && adminPass.value===data.pass){
   loginSection.style.display="none";
   mainSection.style.display="block";
   loadAll();
  } else alert("Wrong login");
 };
 
-document.getElementById("refreshOrdersBtn").onclick=()=>{
- loadOrders();showTab("orders");
-};
-
-window.changeCred=async()=>{
- await setDoc(doc(db,"config","login"),{
-  id:newId.value,pass:newPass.value
- });
+window.changeCred = async function(){
+ await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
  alert("Updated");
 };
 
 /* NAV */
-window.showTab=id=>{
+window.showTab=function(id){
  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 };
 
 /* CATEGORY */
-window.addCategory=async()=>{
- await addDoc(collection(db,"categories"),{
-  en:catEn.value,hi:catHi.value
- });
+window.addCategory=async function(){
+ await addDoc(collection(db,"categories"),{en:catEn.value,hi:catHi.value});
  catEn.value=catHi.value="";
  loadCategories();
 };
@@ -206,14 +178,15 @@ window.addCategory=async()=>{
 async function loadCategories(){
  catTable.innerHTML="";
  catSelect.innerHTML="";
- let s=await getDocs(collection(db,"categories"));
- s.forEach(d=>{
+ let snap=await getDocs(collection(db,"categories"));
+ snap.forEach(d=>{
   let c=d.data();
-  catTable.innerHTML+=`
-   <tr><td>${c.en}</td><td>${c.hi}</td>
-   <td class="delete" onclick="delCat('${d.id}')">❌</td></tr>`;
-  catSelect.innerHTML+=`
-   <option value="${c.en}">${c.en} / ${c.hi}</option>`;
+  catTable.innerHTML+=`<tr>
+   <td>${c.en}</td>
+   <td>${c.hi}</td>
+   <td class="delete" onclick="delCat('${d.id}')">❌</td>
+  </tr>`;
+  catSelect.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 }
 window.delCat=async id=>{
@@ -221,23 +194,36 @@ window.delCat=async id=>{
  loadCategories();
 };
 
-/* ITEMS */
-window.addItem=async()=>{
+/* ITEMS (NEW LOGIC ADDED HERE) */
+window.addItem = async function(){
+ const qtyArr = allowedQty.value
+  .split(",")
+  .map(q=>Number(q.trim()))
+  .filter(q=>q>0);
+
  await addDoc(collection(db,"items"),{
-  cat:catSelect.value,en:itemEn.value,hi:itemHi.value
+  cat: catSelect.value,
+  en: itemEn.value,
+  hi: itemHi.value,
+  unit: allowedUnit.value,
+  qty: qtyArr
  });
- itemEn.value=itemHi.value="";
+
+ itemEn.value=itemHi.value=allowedQty.value="";
  loadItems();
 };
 
 async function loadItems(){
  itemTable.innerHTML="";
- let s=await getDocs(collection(db,"items"));
- s.forEach(d=>{
+ let snap=await getDocs(collection(db,"items"));
+ snap.forEach(d=>{
   let i=d.data();
-  itemTable.innerHTML+=`
-  <tr>
-   <td>${i.cat}</td><td>${i.en}</td><td>${i.hi}</td>
+  itemTable.innerHTML+=`<tr>
+   <td>${i.cat}</td>
+   <td>${i.en}</td>
+   <td>${i.hi}</td>
+   <td>${i.unit}</td>
+   <td>${(i.qty||[]).join(", ")}</td>
    <td class="delete" onclick="delItem('${d.id}')">❌</td>
   </tr>`;
  });
@@ -250,64 +236,45 @@ window.delItem=async id=>{
 /* ORDERS */
 async function loadOrders(){
  orderTable.innerHTML="";
- let s=await getDocs(collection(db,"orders"));
- let arr=[];
- s.forEach(d=>{let o=d.data();o._id=d.id;arr.push(o);});
- arr.sort((a,b)=>Date.parse(b.time)-Date.parse(a.time));
- arr.forEach((o,i)=>{
-  let sn="MP"+(101+i);
-  orderTable.innerHTML+=`
-<tr>
-<td>${sn}</td><td>${o.name}</td><td>${o.mobile}</td>
-<td>${o.address}</td><td>${o.type}</td>
-<td>${o.items}</td><td>${o.time}</td>
-<td class="delete" onclick="delOrder('${o._id}')">❌</td>
-<td><button onclick="printOrder('${encodeURIComponent(JSON.stringify(o))}')">🖨️</button></td>
+ let snap=await getDocs(collection(db,"orders"));
+ snap.forEach(d=>{
+  let o=d.data();
+  orderTable.innerHTML+=`<tr>
+<td>${o.code}</td>
+<td>${o.name}</td>
+<td>${o.mobile}</td>
+<td>${o.address}</td>
+<td>${o.type}</td>
+<td>${o.items}</td>
+<td>${o.time}</td>
+<td class="delete" onclick="delOrder('${d.id}')">❌</td>
 </tr>`;
  });
 }
-
-window.printOrder=function(str){
- let o=JSON.parse(decodeURIComponent(str));
- pName.textContent=o.name||"";
- pAddress.textContent=o.address||"";
- pMobile.textContent=o.mobile||"";
- pType.textContent=o.type||"";
-
- let rows="";
- (o.items||"").split("\n").forEach(l=>{
-  let p=l.match(/पैकेट:\s*(\d+)/);
-  let packets=p?p[1]:"";
-  let clean=l.replace(/,?\s*पैकेट:\s*\d+/,"").trim();
-  let m=clean.match(/^(.*)\s(\d+(\.\d+)?)\s([^\s]+)$/);
-  if(m){
-   rows+=`<tr><td>${m[1]}</td><td>${m[2]} ${m[4]}</td><td>${packets}</td><td></td></tr>`;
-  }
- });
- pItems.innerHTML=rows;
- printOrder.style.display="block";
- setTimeout(()=>{window.print();printOrder.style.display="none"},200);
-};
-
 window.delOrder=async id=>{
  await deleteDoc(doc(db,"orders",id));
  loadOrders();
 };
 
 async function loadAll(){
- showTab("cat");
- loadCategories();loadItems();loadOrders();
+ showTab('cat');
+ loadCategories();
+ loadItems();
+ loadOrders();
 }
 </script>
 
-<!-- GOOGLE HINDI TYPING -->
+<!-- GOOGLE HINDI PHONETIC (UNCHANGED ADDITION) -->
 <script src="https://www.google.com/jsapi"></script>
 <script>
-google.load("elements","1",{packages:["transliteration"]});
+google.load("elements","1",{packages:"transliteration"});
 google.setOnLoadCallback(()=>{
- new google.elements.transliteration.TransliterationControl({
-  sourceLanguage:'en',destinationLanguage:['hi'],transliterationEnabled:true
- }).makeTransliteratable(['catHi','itemHi']);
+ var control=new google.elements.transliteration.TransliterationControl({
+  sourceLanguage:'en',
+  destinationLanguage:['hi'],
+  transliterationEnabled:true
+ });
+ control.makeTransliteratable(['catHi','itemHi']);
 });
 </script>
 
