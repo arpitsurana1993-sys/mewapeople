@@ -2,200 +2,207 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Place Order</title>
+<title>Surana Ashok Kumar Arvind Kumar | Mirchi Bazar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial;background:#f1f8e9;padding:15px}
-.container{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:12px}
+body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
+.container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
 h2{text-align:center;color:#1b5e20}
-input,select,button{width:100%;padding:10px;margin-top:8px}
-button{background:#2e7d32;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:8px;text-align:center}
-.qtyRow{display:flex;gap:6px}
-.qtyRow input,.qtyRow select{width:100%}
-.popup{
- display:none;
- position:fixed;
- top:0;left:0;width:100%;height:100%;
- background:rgba(0,0,0,0.5);
- align-items:center;
- justify-content:center;
-}
-.popup div{
- background:#fff;
- padding:25px;
- border-radius:10px;
- font-size:18px;
- color:#1b5e20;
-}
+label{font-weight:bold;margin-top:10px;display:block}
+input,select,textarea,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
+.row{display:flex;gap:8px;align-items:center}
+button{background:#2e7d32;color:#fff;border:none;border-radius:25px;margin-top:15px;cursor:pointer}
+table{width:100%;margin-top:10px;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+th{background:#e8f5e9}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h2>🛒 Place Order</h2>
+<h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
-<input id="custName" placeholder="Name">
-<input id="custMobile" placeholder="Mobile Number" type="tel">
-<input id="custAddress" placeholder="Address">
+<label>Name / नाम *</label>
+<input id="custName" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
+<label>Mobile / मोबाइल *</label>
+<input id="custMobile" inputmode="numeric"
+ oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+
+<label>Address / पता *</label>
+<textarea id="custAddress"></textarea>
+
+<label>Delivery Type</label>
+<select id="deliveryType">
+ <option>Home Delivery</option>
+ <option>Pick from Shop</option>
+</select>
+
+<hr>
+
+<label>Category</label>
 <select id="category"></select>
+
+<label>Item</label>
 <select id="item"></select>
 
-<div class="qtyRow">
- <input id="qty" type="number" min="1" placeholder="Weight">
- <select id="unit">
-  <option value="ग्राम">Gram / ग्राम</option>
-  <option value="किलो">Kg / किलो</option>
- </select>
+<label>Quantity</label>
+<div class="row">
+ <select id="qty"></select>
+ <select id="unit" disabled></select>
+ <input id="packetCount" type="number" min="1" value="1" style="width:90px" placeholder="Packets">
 </div>
 
 <button id="addBtn">Add Item</button>
 
 <table>
 <thead>
-<tr><th>Item</th><th>Qty</th><th>❌</th></tr>
+<tr><th>Item</th><th>Qty</th><th>Packets</th><th>❌</th></tr>
 </thead>
 <tbody id="cartTable"></tbody>
 </table>
 
-<select id="deliveryType">
- <option value="Pickup">Pickup</option>
- <option value="Home Delivery">Home Delivery</option>
-</select>
+<button id="orderBtn">Place Order & WhatsApp</button>
 
-<button id="orderBtn">Place Order</button>
-
-</div>
-
-<!-- SUCCESS POPUP -->
-<div class="popup" id="successPopup">
- <div>✅ Order placed successfully!</div>
 </div>
 
 <!-- FIREBASE -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-const firebaseConfig = {
+<script>
+firebase.initializeApp({
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
  authDomain: "mewapeople-25844.firebaseapp.com",
  projectId: "mewapeople-25844",
  storageBucket: "mewapeople-25844.firebasestorage.app",
  messagingSenderId: "53407017674",
  appId: "1:53407017674:web:1667bb04862a76c02a6233"
-};
+});
+const db=firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const category=document.getElementById("category");
+const item=document.getElementById("item");
+const qty=document.getElementById("qty");
+const unit=document.getElementById("unit");
+const packetCount=document.getElementById("packetCount");
+const cartTable=document.getElementById("cartTable");
 
-let allItems=[], cart=[], lastOrderKey="";
+let items=[],cart=[];
 
 /* LOAD DATA */
 async function loadData(){
- let cSnap = await getDocs(collection(db,"categories"));
- cSnap.forEach(d=>{
+ const cs=await db.collection("categories").get();
+ category.innerHTML="";
+ cs.forEach(d=>{
   let c=d.data();
-  category.innerHTML+=`<option value="${c.en}">${c.en}/${c.hi}</option>`;
+  category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
- let iSnap = await getDocs(collection(db,"items"));
- iSnap.forEach(d=>allItems.push(d.data()));
+ const it=await db.collection("items").get();
+ items=it.docs.map(d=>d.data());
 
  loadItems();
 }
 loadData();
 
+category.onchange=loadItems;
+
 function loadItems(){
  item.innerHTML="";
- allItems.filter(i=>i.cat===category.value)
+ items.filter(i=>i.cat===category.value)
  .forEach(i=>{
   item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
+ loadQtyUnit();
 }
-category.onchange=loadItems;
 
-/* AUTO CONVERT GM → KG */
-function formatQty(qty,unit){
- qty=parseFloat(qty);
- if(unit==="ग्राम" && qty>=1000){
-  return {qty:(qty/1000).toFixed(2), unit:"किलो"};
- }
- return {qty,unit};
+item.onchange=loadQtyUnit;
+
+/* LOAD QTY + UNIT BASED ON ITEM */
+function loadQtyUnit(){
+ const i=items.find(x=>x.en===item.value);
+ if(!i)return;
+
+ unit.innerHTML=`<option>${i.unit}</option>`;
+ qty.innerHTML="";
+ (i.qty||[]).forEach(q=>{
+  qty.innerHTML+=`<option value="${q}">${q}</option>`;
+ });
 }
 
 /* ADD ITEM */
 addBtn.onclick=function(){
- let s=allItems.find(i=>i.en===item.value);
- if(!s)return;
+ const i=items.find(x=>x.en===item.value);
+ if(!i)return;
 
- let f=formatQty(qty.value,unit.value);
+ const q=qty.value;
+ const p=packetCount.value;
 
- cart.push({hi:s.hi, qty:f.qty, unit:f.unit});
+ cart.push({
+  hi:i.hi,
+  qty:q,
+  unit:i.unit,
+  packets:p
+ });
  renderCart();
 };
 
-/* RENDER CART */
 function renderCart(){
  cartTable.innerHTML="";
  cart.forEach((c,i)=>{
   cartTable.innerHTML+=`
-  <tr>
-   <td>${c.hi}</td>
-   <td>${c.qty} ${c.unit}</td>
-   <td onclick="removeItem(${i})">❌</td>
-  </tr>`;
+   <tr>
+    <td>${c.hi}</td>
+    <td>${c.qty} ${c.unit}</td>
+    <td>${c.packets}</td>
+    <td onclick="removeItem(${i})">❌</td>
+   </tr>`;
  });
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
 /* PLACE ORDER */
 orderBtn.onclick=async function(){
- let name=custName.value.trim();
- let mobile=custMobile.value.trim();
- let address=custAddress.value.trim();
+ const name=custName.value.trim();
+ const mobile=custMobile.value.trim();
+ const address=custAddress.value.trim();
 
  if(!name||!mobile||!address){
-  alert("Fill all mandatory fields");
+  alert("All fields are mandatory");
   return;
  }
-
  if(cart.length===0){
   alert("Add at least one item");
   return;
  }
 
- let orderKey=name+mobile;
- if(orderKey===lastOrderKey){
-  alert("Order already placed");
-  return;
- }
- lastOrderKey=orderKey;
+ const code="ORD"+Date.now();
+ const time=new Date().toLocaleString();
+ const itemsText=cart
+  .map(i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`)
+  .join("\n");
 
- let itemsText=cart.map(c=>`${c.hi} ${c.qty} ${c.unit}`).join("\n");
-
- await addDoc(collection(db,"orders"),{
-  name,mobile,address,
+ await db.collection("orders").add({
+  code,name,mobile,address,
   type:deliveryType.value,
-  items:itemsText,
-  time:new Date().toLocaleString()
+  items:itemsText,time
  });
 
- /* WHATSAPP */
- let msg=`*New Order*\n\n${itemsText}\n\nName: ${name}\nMobile: ${mobile}\nAddress: ${address}`;
- window.open(`https://wa.me/91XXXXXXXXXX?text=${encodeURIComponent(msg)}`);
+ window.location.href=
+ "https://wa.me/919462439993?text="+
+ encodeURIComponent(
+`ऑर्डर नंबर: ${code}
+नाम: ${name}
+मोबाइल: ${mobile}
+पता: ${address}
+डिलीवरी: ${deliveryType.value}
 
- /* SUCCESS POPUP */
- successPopup.style.display="flex";
- setTimeout(()=>{
-  successPopup.style.display="none";
-  cart=[];
-  renderCart();
- },2000);
+सामान:
+${itemsText}`
+ );
 };
 </script>
 
