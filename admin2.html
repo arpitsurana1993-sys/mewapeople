@@ -14,92 +14,97 @@ nav button{padding:10px 15px;border:none;border-radius:20px;background:#2e7d32;c
 section{display:none}
 section.active{display:block}
 label{font-weight:bold; display:block; margin-top:10px;}
-input,select{width:100%;padding:8px;margin-top:5px; box-sizing:border-box;}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:8px;text-align:center}
+input,select{width:100%;padding:10px;margin-top:5px; box-sizing:border-box; border:1px solid #ccc; border-radius:5px;}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{border:1px solid #ccc;padding:10px;text-align:center}
 th{background:#e8f5e9}
 .delete{color:red;cursor:pointer; font-weight:bold;}
+button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; border:none; border-radius:5px; margin-top:15px; cursor:pointer; font-size:16px;}
+button.action-btn:hover {background:#1b5e20;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
+<h1>🛒 Admin - Surana Ashok Kumar</h1>
 
 <section id="loginSection" class="active">
 <h3>Admin Login</h3>
 <input id="adminId" placeholder="Admin ID">
 <input id="adminPass" type="password" placeholder="Password">
-<button onclick="login()" style="width:100%; margin-top:10px; padding:10px; background:#2e7d32; color:white; border:none; border-radius:5px;">Login</button>
+<button class="action-btn" onclick="login()">Login</button>
 </section>
 
-<section id="mainSection" style="display:none;">
-
+<section id="mainSection">
 <nav>
-<button onclick="showTab('cred')">Change Login</button>
 <button onclick="showTab('cat')">Categories</button>
 <button onclick="showTab('item')">Items</button>
 <button onclick="showTab('orders')">Orders</button>
+<button onclick="showTab('cred')">Settings</button>
 </nav>
 
 <section id="cred">
 <h3>Change Login Credentials</h3>
 <input id="newId" placeholder="New Admin ID">
 <input id="newPass" placeholder="New Password">
-<button onclick="changeCred()" style="margin-top:10px;">Update</button>
+<button class="action-btn" onclick="changeCred()">Update Credentials</button>
 </section>
 
 <section id="cat">
-<h3>Categories</h3>
+<h3>Manage Categories</h3>
 <input id="catEn" placeholder="Category (English)">
-<input id="catHi" placeholder="Category (Hindi – type English)">
-<button onclick="addCategory()" style="margin-top:10px;">Add Category</button>
-
+<input id="catHi" placeholder="Category (Hindi)">
+<button class="action-btn" onclick="addCategory()">Add Category</button>
 <table>
-<thead><tr><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
+<thead><tr><th>English</th><th>Hindi</th><th>Action</th></tr></thead>
 <tbody id="catTable"></tbody>
 </table>
 </section>
 
 <section id="item">
-<h3>Items</h3>
-
-<label>Category</label>
+<h3>Manage Items</h3>
+<label>Select Category</label>
 <select id="catSelect"></select>
 
-<label>Item (English)</label>
-<input id="itemEn">
+<label>Item Name (English)</label>
+<input id="itemEn" placeholder="e.g. Cashew">
 
-<label>Item (Hindi – type English)</label>
-<input id="itemHi">
+<label>Item Name (Hindi)</label>
+<input id="itemHi" placeholder="e.g. काजू">
 
-<label>Allowed Units (Select up to 2)</label>
-<select id="unit1">
-  <option value="">-- Select --</option>
-  <option value="kg">Kg / किलो</option>
-  <option value="gm">Gram / ग्राम</option>
-  <option value="packet">Packet / पैकेट</option>
-  <option value="piece">Piece / पीस</option>
-  <option value="litre">litre / लीटर</option>
-</select>
+<label>Units (Choose up to 2)</label>
+<div style="display:flex; gap:10px;">
+  <select id="unit1">
+    <option value="">-- Select --</option>
+    <option value="kg">Kg / किलो</option>
+    <option value="gm">Gram / ग्राम</option>
+    <option value="packet">Packet / पैकेट</option>
+    <option value="piece">Piece / पीस</option>
+    <option value="litre">litre / लीटर</option>
+  </select>
+  <select id="unit2">
+    <option value="">-- Optional --</option>
+    <option value="kg">Kg / किलो</option>
+    <option value="gm">Gram / ग्राम</option>
+    <option value="packet">Packet / पैकेट</option>
+    <option value="piece">Piece / पीस</option>
+    <option value="litre">litre / लीटर</option>
+  </select>
+</div>
 
-<select id="unit2" style="margin-top:6px">
-  <option value="">-- Optional --</option>
-  <option value="kg">Kg / किलो</option>
-  <option value="gm">Gram / ग्राम</option>
-  <option value="packet">Packet / पैकेट</option>
-  <option value="piece">Piece / पीस</option>
-  <option value="litre">litre / लीटर</option>
-</select>
+<div style="display:flex; gap:10px;">
+  <div style="flex:1">
+    <label>Min Qty</label>
+    <input id="minQty" type="number" value="1">
+  </div>
+  <div style="flex:1">
+    <label>Max Qty</label>
+    <input id="maxQty" type="number" value="100">
+  </div>
+</div>
 
-<label>Minimum Weight/Qty</label>
-<input id="minQty" type="number" min="1" value="1">
-
-<label>Maximum Weight/Qty (For KG/Litre/Packet)</label>
-<input id="maxQty" type="number" min="1" value="100">
-
-<button onclick="addItem()" style="margin-top:15px; background:#1b5e20; color:white; padding:10px; width:100%; border:none; border-radius:5px;">Add Item</button>
+<button class="action-btn" onclick="addItem()">Add Item to Shop</button>
 
 <table>
 <thead>
@@ -108,8 +113,8 @@ th{background:#e8f5e9}
 <th>English</th>
 <th>Hindi</th>
 <th>Units</th>
-<th>Min/Max</th>
-<th>❌</th>
+<th>Limits</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody id="itemTable"></tbody>
@@ -117,25 +122,23 @@ th{background:#e8f5e9}
 </section>
 
 <section id="orders">
-<h3>Orders</h3>
-<button onclick="loadOrders()" style="margin-bottom:10px;">🔄 Refresh Orders</button>
+<h3>Orders List</h3>
+<button onclick="loadOrders()">🔄 Refresh List</button>
 <table>
 <thead>
 <tr>
 <th>Order No</th>
-<th>Name</th>
+<th>Customer</th>
 <th>Mobile</th>
 <th>Address</th>
-<th>Type</th>
 <th>Items</th>
 <th>Time</th>
-<th>❌</th>
+<th>Action</th>
 </tr>
 </thead>
 <tbody id="orderTable"></tbody>
 </table>
 </section>
-
 </section>
 </div>
 
@@ -155,148 +158,146 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* LOGIN */
+// LOGIN LOGIC
 window.login = async function(){
- let snap = await getDoc(doc(db,"config","login"));
- let data = snap.data();
- if(adminId.value===data.id && adminPass.value===data.pass){
-  document.getElementById("loginSection").style.display="none";
-  document.getElementById("mainSection").style.display="block";
-  loadAll();
- } else alert("Wrong login");
+ const id = document.getElementById("adminId").value;
+ const pass = document.getElementById("adminPass").value;
+ try {
+  let snap = await getDoc(doc(db,"config","login"));
+  let data = snap.data();
+  if(id === data.id && pass === data.pass){
+   document.getElementById("loginSection").style.display="none";
+   document.getElementById("mainSection").style.display="block";
+   loadAll();
+  } else { alert("Incorrect Admin ID or Password"); }
+ } catch(e) { alert("Error connecting to Database: " + e.message); }
 };
 
 window.changeCred = async function(){
- if(!newId.value || !newPass.value) return alert("Fill both fields");
- await setDoc(doc(db,"config","login"),{id:newId.value, pass:newPass.value});
- alert("Credentials Updated");
+ const id = document.getElementById("newId").value;
+ const pass = document.getElementById("newPass").value;
+ if(!id || !pass) return alert("Fill both fields");
+ await setDoc(doc(db,"config","login"),{id, pass});
+ alert("Credentials Updated!");
 };
 
-/* NAV */
-window.showTab=function(id){
+window.showTab = function(id){
  document.querySelectorAll("#mainSection > section").forEach(s=>s.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 };
 
-/* CATEGORY */
-window.addCategory=async function(){
- if(!catEn.value || !catHi.value) return alert("Fill all fields");
- await addDoc(collection(db,"categories"),{en:catEn.value, hi:catHi.value});
- catEn.value=catHi.value="";
+// CATEGORIES LOGIC
+window.addCategory = async function(){
+ const en = document.getElementById("catEn").value;
+ const hi = document.getElementById("catHi").value;
+ if(!en || !hi) return alert("Enter English and Hindi names");
+ await addDoc(collection(db,"categories"),{en, hi});
+ document.getElementById("catEn").value = "";
+ document.getElementById("catHi").value = "";
  loadCategories();
 };
 
 async function loadCategories(){
  const catTable = document.getElementById("catTable");
  const catSelect = document.getElementById("catSelect");
- catTable.innerHTML="Loading...";
- catSelect.innerHTML="";
- 
- let snap=await getDocs(collection(db,"categories"));
+ catTable.innerHTML = "Loading...";
+ let snap = await getDocs(collection(db,"categories"));
  let list = [];
  snap.forEach(d => list.push({id:d.id, ...d.data()}));
- 
- // Alphabetical Sort
  list.sort((a,b)=> a.en.localeCompare(b.en));
 
- catTable.innerHTML="";
+ catTable.innerHTML = "";
+ catSelect.innerHTML = "";
  list.forEach(c=>{
-  catTable.innerHTML+=`<tr>
-   <td>${c.en}</td>
-   <td>${c.hi}</td>
-   <td class="delete" onclick="delCat('${c.id}')">❌</td>
-  </tr>`;
-  catSelect.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+  catTable.innerHTML += `<tr><td>${c.en}</td><td>${c.hi}</td><td class="delete" onclick="delCat('${c.id}')">❌</td></tr>`;
+  catSelect.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 }
-window.delCat=async id=>{
- if(confirm("Delete this category?")) {
-  await deleteDoc(doc(db,"categories",id));
-  loadCategories();
- }
-};
 
-/* ITEMS */
+window.delCat = async (id) => { if(confirm("Delete Category?")){ await deleteDoc(doc(db,"categories",id)); loadCategories(); } };
+
+// ITEM LOGIC (FIXED ADDING ISSUE)
 window.addItem = async function(){
- if(!itemEn.value || !itemHi.value || !unit1.value) return alert("Select Category, Item names and at least one Unit");
+ try {
+  const cat = document.getElementById("catSelect").value;
+  const en = document.getElementById("itemEn").value;
+  const hi = document.getElementById("itemHi").value;
+  const u1 = document.getElementById("unit1").value;
+  const u2 = document.getElementById("unit2").value;
+  const min = document.getElementById("minQty").value;
+  const max = document.getElementById("maxQty").value;
 
- // Collect units from both dropdowns
- const units = [unit1.value, unit2.value].filter(u => u !== "");
+  if(!en || !hi || !u1) {
+   alert("Please enter Item Name and at least one Unit.");
+   return;
+  }
 
- await addDoc(collection(db,"items"),{
-  cat: document.getElementById("catSelect").value,
-  en: itemEn.value,
-  hi: itemHi.value,
-  units: units,
-  minQty: Number(minQty.value),
-  maxQty: Number(maxQty.value)
- });
+  const units = [u1, u2].filter(u => u !== "");
 
- // Clear inputs
- itemEn.value=itemHi.value="";
- unit1.value=unit2.value="";
- loadItems();
+  await addDoc(collection(db,"items"), {
+   cat: cat,
+   en: en,
+   hi: hi,
+   units: units,
+   minQty: Number(min),
+   maxQty: Number(max)
+  });
+
+  alert("Item added successfully!");
+  document.getElementById("itemEn").value = "";
+  document.getElementById("itemHi").value = "";
+  loadItems();
+ } catch(e) {
+  alert("Error adding item: " + e.message);
+ }
 };
 
 async function loadItems(){
  const itemTable = document.getElementById("itemTable");
- itemTable.innerHTML="Loading...";
- 
- let snap=await getDocs(collection(db,"items"));
+ itemTable.innerHTML = "Loading items...";
+ let snap = await getDocs(collection(db,"items"));
  let list = [];
  snap.forEach(d => list.push({id:d.id, ...d.data()}));
-
- // Alphabetical Sort
  list.sort((a,b)=> a.en.localeCompare(b.en));
 
- itemTable.innerHTML="";
+ itemTable.innerHTML = "";
  list.forEach(i=>{
-  itemTable.innerHTML+=`<tr>
+  itemTable.innerHTML += `<tr>
    <td>${i.cat}</td>
    <td>${i.en}</td>
    <td>${i.hi}</td>
    <td>${(i.units||[]).join(", ")}</td>
-   <td>${i.minQty} - ${i.maxQty}</td>
+   <td>${i.minQty}-${i.maxQty}</td>
    <td class="delete" onclick="delItem('${i.id}')">❌</td>
   </tr>`;
  });
 }
-window.delItem=async id=>{
- if(confirm("Delete this item?")) {
-  await deleteDoc(doc(db,"items",id));
-  loadItems();
- }
-};
 
-/* ORDERS */
+window.delItem = async (id) => { if(confirm("Delete Item?")){ await deleteDoc(doc(db,"items",id)); loadItems(); } };
+
+// ORDERS LOGIC
 window.loadOrders = async function(){
  const orderTable = document.getElementById("orderTable");
- orderTable.innerHTML="Loading...";
- let snap=await getDocs(collection(db,"orders"));
- orderTable.innerHTML="";
+ orderTable.innerHTML = "Loading...";
+ let snap = await getDocs(collection(db,"orders"));
+ orderTable.innerHTML = "";
  snap.forEach(d=>{
-  let o=d.data();
-  orderTable.innerHTML+=`<tr>
-<td>${o.code}</td>
-<td>${o.name}</td>
-<td>${o.mobile}</td>
-<td>${o.address}</td>
-<td>${o.type}</td>
-<td><small>${o.items}</small></td>
-<td>${o.time}</td>
-<td class="delete" onclick="delOrder('${d.id}')">❌</td>
-</tr>`;
+  let o = d.data();
+  orderTable.innerHTML += `<tr>
+   <td>${o.code}</td>
+   <td>${o.name}</td>
+   <td>${o.mobile}</td>
+   <td>${o.address}</td>
+   <td><small>${o.items}</small></td>
+   <td>${o.time}</td>
+   <td class="delete" onclick="delOrder('${d.id}')">❌</td>
+  </tr>`;
  });
-}
-window.delOrder=async id=>{
- if(confirm("Delete order record?")) {
-  await deleteDoc(doc(db,"orders",id));
-  loadOrders();
- }
 };
 
+window.delOrder = async (id) => { if(confirm("Remove Order?")){ await deleteDoc(doc(db,"orders",id)); loadOrders(); } };
+
 async function loadAll(){
- showTab('cat');
  loadCategories();
  loadItems();
  loadOrders();
@@ -308,9 +309,7 @@ async function loadAll(){
 google.load("elements","1",{packages:"transliteration"});
 google.setOnLoadCallback(()=>{
  var control=new google.elements.transliteration.TransliterationControl({
-  sourceLanguage:'en',
-  destinationLanguage:['hi'],
-  transliterationEnabled:true
+  sourceLanguage:'en', destinationLanguage:['hi'], transliterationEnabled:true
  });
  control.makeTransliteratable(['catHi','itemHi']);
 });
