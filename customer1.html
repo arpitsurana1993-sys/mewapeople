@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Surana Ashok Kumar Arvind Kumar | Mirchi Bazar 📞 9462439993</title>
+<title>Surana Ashok Kumar Arvind Kumar | Mirchi Bazar</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,28 +10,12 @@ body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
 .container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
 h2{text-align:center;color:#1b5e20}
 label{font-weight:bold;margin-top:10px;display:block}
-input,select,textarea,button{
- width:100%;padding:10px;margin-top:5px;font-size:16px
-}
-.row{display:flex;gap:10px}
-.qty{width:90px}
-.unit{width:120px}
-.packets{width:120px}
-button{
- background:#2e7d32;color:#fff;border:none;border-radius:25px;
- margin-top:15px;cursor:pointer
-}
+input,select,textarea,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
+.row{display:flex;gap:8px;align-items:center}
+button{background:#2e7d32;color:#fff;border:none;border-radius:25px;margin-top:15px;cursor:pointer}
 table{width:100%;margin-top:10px;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
-
-.popup{
- display:none;position:fixed;top:0;left:0;width:100%;height:100%;
- background:rgba(0,0,0,.5);justify-content:center;align-items:center
-}
-.popup div{
- background:#fff;padding:20px;border-radius:10px;text-align:center
-}
 </style>
 </head>
 
@@ -41,17 +25,16 @@ th{background:#e8f5e9}
 <h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
 
 <label>Name / नाम *</label>
-<input id="custName"
- oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
+<input id="custName" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
-<label>Mobile no / मोबाइल नंबर *</label>
-<input id="custMobile"
+<label>Mobile / मोबाइल *</label>
+<input id="custMobile" inputmode="numeric"
  oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <label>Address / पता *</label>
 <textarea id="custAddress"></textarea>
 
-<label>Delivery Type / डिलिवरी प्रकार</label>
+<label>Delivery Type</label>
 <select id="deliveryType">
  <option>Home Delivery</option>
  <option>Pick from Shop</option>
@@ -59,50 +42,33 @@ th{background:#e8f5e9}
 
 <hr>
 
-<label>Category / वर्ग</label>
+<label>Category</label>
 <select id="category"></select>
 
-<label>Item / सामग्री</label>
+<label>Item</label>
 <select id="item"></select>
 
-<label>Weight / मात्रा</label>
+<label>Quantity</label>
 <div class="row">
- <input id="qty" type="number" min="0.01" step="0.01" value="1" class="qty">
- <select id="unit" class="unit">
-  <option value="किलो">Kg / किलो</option>
-  <option value="ग्राम">Gram / ग्राम</option>
-  <option value="पीस">Piece / पीस</option>
-  <option value="पैकेट">Packet / पैकेट</option>
- </select>
- <label>No Of Packets</label>
- <input id="packetCount" type="number" min="1" value="1" class="packets"
-  placeholder="Packets">
+ <select id="qty"></select>
+ <select id="unit" disabled></select>
+ <input id="packetCount" type="number" min="1" value="1" style="width:90px" placeholder="Packets">
 </div>
 
 <button id="addBtn">Add Item</button>
 
 <table>
 <thead>
-<tr>
- <th>Item</th>
- <th>Qty</th>
- <th>Packets</th>
- <th>❌</th>
-</tr>
+<tr><th>Item</th><th>Qty</th><th>Packets</th><th>❌</th></tr>
 </thead>
 <tbody id="cartTable"></tbody>
 </table>
 
 <button id="orderBtn">Place Order & WhatsApp</button>
+
 </div>
 
-<div class="popup" id="successPopup">
- <div>
-  <h3>✅ Order Placed Successfully</h3>
-  <p>WhatsApp will open now</p>
- </div>
-</div>
-
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -110,16 +76,23 @@ th{background:#e8f5e9}
 firebase.initializeApp({
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
  authDomain: "mewapeople-25844.firebaseapp.com",
- projectId: "mewapeople-25844"
+ projectId: "mewapeople-25844",
+ storageBucket: "mewapeople-25844.firebasestorage.app",
+ messagingSenderId: "53407017674",
+ appId: "1:53407017674:web:1667bb04862a76c02a6233"
 });
 const db=firebase.firestore();
 
 const category=document.getElementById("category");
 const item=document.getElementById("item");
+const qty=document.getElementById("qty");
+const unit=document.getElementById("unit");
+const packetCount=document.getElementById("packetCount");
 const cartTable=document.getElementById("cartTable");
 
-let allItems=[],cart=[],lastOrderKey=null;
+let items=[],cart=[];
 
+/* LOAD DATA */
 async function loadData(){
  const cs=await db.collection("categories").get();
  category.innerHTML="";
@@ -129,7 +102,8 @@ async function loadData(){
  });
 
  const it=await db.collection("items").get();
- allItems=it.docs.map(d=>d.data());
+ items=it.docs.map(d=>d.data());
+
  loadItems();
 }
 loadData();
@@ -138,27 +112,40 @@ category.onchange=loadItems;
 
 function loadItems(){
  item.innerHTML="";
- allItems.filter(i=>i.cat===category.value)
+ items.filter(i=>i.cat===category.value)
  .forEach(i=>{
   item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
+ loadQtyUnit();
 }
 
-addBtn.onclick=function(){
- let s=allItems.find(i=>i.en===item.value);
- if(!s)return;
+item.onchange=loadQtyUnit;
 
- if(cart.some(c=>c.en===s.en)){
-  alert("Item already added");
-  return;
- }
+/* LOAD QTY + UNIT BASED ON ITEM */
+function loadQtyUnit(){
+ const i=items.find(x=>x.en===item.value);
+ if(!i)return;
+
+ unit.innerHTML=`<option>${i.unit}</option>`;
+ qty.innerHTML="";
+ (i.qty||[]).forEach(q=>{
+  qty.innerHTML+=`<option value="${q}">${q}</option>`;
+ });
+}
+
+/* ADD ITEM */
+addBtn.onclick=function(){
+ const i=items.find(x=>x.en===item.value);
+ if(!i)return;
+
+ const q=qty.value;
+ const p=packetCount.value;
 
  cart.push({
-  en:s.en,
-  hi:s.hi,
-  qty:qty.value,
-  unit:unit.value,
-  packets:packetCount.value
+  hi:i.hi,
+  qty:q,
+  unit:i.unit,
+  packets:p
  });
  renderCart();
 };
@@ -167,51 +154,46 @@ function renderCart(){
  cartTable.innerHTML="";
  cart.forEach((c,i)=>{
   cartTable.innerHTML+=`
-  <tr>
-   <td>${c.hi}</td>
-   <td>${c.qty} ${c.unit}</td>
-   <td>${c.packets}</td>
-   <td onclick="removeItem(${i})">❌</td>
-  </tr>`;
+   <tr>
+    <td>${c.hi}</td>
+    <td>${c.qty} ${c.unit}</td>
+    <td>${c.packets}</td>
+    <td onclick="removeItem(${i})">❌</td>
+   </tr>`;
  });
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
+/* PLACE ORDER */
 orderBtn.onclick=async function(){
  const name=custName.value.trim();
  const mobile=custMobile.value.trim();
  const address=custAddress.value.trim();
 
  if(!name||!mobile||!address){
-  alert("Name, Mobile and Address are mandatory");
+  alert("All fields are mandatory");
   return;
  }
  if(cart.length===0){
-  alert("Please add item");
+  alert("Add at least one item");
   return;
  }
 
- const key=name+mobile;
- if(key===lastOrderKey)return;
- lastOrderKey=key;
-
  const code="ORD"+Date.now();
  const time=new Date().toLocaleString();
- const itemsHindi=cart.map(
-  i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`
- ).join("\n");
+ const itemsText=cart
+  .map(i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`)
+  .join("\n");
 
  await db.collection("orders").add({
   code,name,mobile,address,
   type:deliveryType.value,
-  items:itemsHindi,time
+  items:itemsText,time
  });
 
- successPopup.style.display="flex";
-
- setTimeout(()=>{
-  window.open(
-   "https://wa.me/919462439993?text="+encodeURIComponent(
+ window.location.href=
+ "https://wa.me/919462439993?text="+
+ encodeURIComponent(
 `ऑर्डर नंबर: ${code}
 नाम: ${name}
 मोबाइल: ${mobile}
@@ -219,12 +201,10 @@ orderBtn.onclick=async function(){
 डिलीवरी: ${deliveryType.value}
 
 सामान:
-${itemsHindi}`
-   ),"_blank");
- },1000);
-
- cart=[];renderCart();
+${itemsText}`
+ );
 };
 </script>
+
 </body>
 </html>
