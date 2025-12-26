@@ -121,7 +121,6 @@ const cartTable=document.getElementById("cartTable");
 
 let items=[],cart=[];
 
-/* LOAD DATA */
 async function loadData(){
  const cs=await db.collection("categories").get();
  category.innerHTML="";
@@ -150,6 +149,7 @@ function loadItems(){
 
 item.onchange=loadQtyUnit;
 
+/* Updated Logic for Unit-based limits */
 function loadQtyUnit(){
  const i=items.find(x=>x.en===item.value);
  if(!i)return;
@@ -159,12 +159,30 @@ function loadQtyUnit(){
   unit.innerHTML+=`<option value="${u}">${u}</option>`;
  });
 
- qty.value = i.minQty || 1;
- qty.min   = i.minQty || 1;
- qty.max   = i.maxQty || 9999;
+ applyLimits();
 }
 
-/* ADD ITEM */
+unit.onchange = applyLimits;
+
+function applyLimits() {
+  const i = items.find(x => x.en === item.value);
+  if (!i) return;
+
+  const selectedUnit = unit.value.toLowerCase();
+  
+  if (selectedUnit === "gm" || selectedUnit === "g") {
+    qty.min = 1;
+    qty.max = 1000;
+  } else {
+    // Logic for kg or other units
+    qty.min = 1;
+    qty.max = i.maxQty || 9999;
+  }
+
+  // Set default value based on admin minQty but respect the new floor of 1
+  qty.value = i.minQty || 1;
+}
+
 addBtn.onclick=function(){
  const i=items.find(x=>x.en===item.value);
  if(!i)return;
@@ -198,7 +216,6 @@ function renderCart(){
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
-/* PLACE ORDER */
 orderBtn.onclick=async function(){
  const name=custName.value.trim();
  const mobile=custMobile.value.trim();
