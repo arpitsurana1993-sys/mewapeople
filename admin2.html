@@ -78,16 +78,29 @@ th{background:#e8f5e9}
 <label>Item (Hindi – type English)</label>
 <input id="itemHi">
 
-<label>Allowed Unit</label>
-<select id="allowedUnit">
+<label>Allowed Units (Select up to 2)</label>
+<select id="unit1">
+  <option value="">-- Select --</option>
   <option value="kg">Kg / किलो</option>
   <option value="gm">Gram / ग्राम</option>
   <option value="packet">Packet / पैकेट</option>
   <option value="piece">Piece / पीस</option>
 </select>
 
-<label>Allowed Quantities (comma separated)</label>
-<input id="allowedQty" placeholder="250,500,750,1000">
+<select id="unit2" style="margin-top:6px">
+  <option value="">-- Optional --</option>
+  <option value="kg">Kg / किलो</option>
+  <option value="gm">Gram / ग्राम</option>
+  <option value="packet">Packet / पैकेट</option>
+  <option value="piece">Piece / पीस</option>
+</select>
+
+<label>Minimum Quantity</label>
+<input id="minQty" type="number" min="1" value="1">
+
+<label>Maximum Quantity</label>
+<input id="maxQty" type="number" min="1" value="1">
+
 
 <button onclick="addItem()">Add Item</button>
 
@@ -196,22 +209,43 @@ window.delCat=async id=>{
 
 /* ITEMS (NEW LOGIC ADDED HERE) */
 window.addItem = async function(){
- const qtyArr = allowedQty.value
-  .split(",")
-  .map(q=>Number(q.trim()))
-  .filter(q=>q>0);
+
+ const units = [];
+ if(unit1.value) units.push(unit1.value);
+ if(unit2.value && unit2.value !== unit1.value) units.push(unit2.value);
+
+ if(units.length === 0){
+   alert("Please select at least one unit");
+   return;
+ }
+
+ const min = Number(minQty.value);
+ const max = Number(maxQty.value);
+
+ if(min <= 0 || max <= 0 || min > max){
+   alert("Invalid min / max quantity");
+   return;
+ }
 
  await addDoc(collection(db,"items"),{
   cat: catSelect.value,
   en: itemEn.value,
   hi: itemHi.value,
-  unit: allowedUnit.value,
-  qty: qtyArr
+  units: units,        // 👈 array (1 or 2 units)
+  minQty: min,
+  maxQty: max
  });
 
- itemEn.value=itemHi.value=allowedQty.value="";
+ itemEn.value = "";
+ itemHi.value = "";
+ unit1.value = "";
+ unit2.value = "";
+ minQty.value = 1;
+ maxQty.value = 1;
+
  loadItems();
 };
+
 
 async function loadItems(){
  itemTable.innerHTML="";
@@ -222,8 +256,9 @@ async function loadItems(){
    <td>${i.cat}</td>
    <td>${i.en}</td>
    <td>${i.hi}</td>
-   <td>${i.unit}</td>
-   <td>${(i.qty||[]).join(", ")}</td>
+   <td>${(i.units || []).join(" , ")}</td>
+  <td>${i.minQty} - ${i.maxQty}</td>
+
    <td class="delete" onclick="delItem('${d.id}')">❌</td>
   </tr>`;
  });
