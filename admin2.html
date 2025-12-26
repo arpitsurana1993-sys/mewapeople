@@ -7,44 +7,47 @@
 
 <style>
 body{font-family:Arial;background:#f1f8e9;margin:0;padding:15px}
-.container{max-width:1100px;margin:auto;background:#fff;padding:20px;border-radius:12px}
-h1{text-align:center;color:#1b5e20}
-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
-nav button{padding:10px 15px;border:none;border-radius:20px;background:#2e7d32;color:#fff;cursor:pointer}
+.container{max-width:1100px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+h1{text-align:center;color:#1b5e20;margin-bottom:20px}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;justify-content:center}
+nav button{padding:12px 20px;border:none;border-radius:25px;background:#2e7d32;color:#fff;cursor:pointer;font-weight:bold;transition:0.3s}
+nav button:hover{background:#1b5e20}
 section{display:none}
 section.active{display:block}
-label{font-weight:bold; display:block; margin-top:10px;}
-input,select{width:100%;padding:10px;margin-top:5px; box-sizing:border-box; border:1px solid #ccc; border-radius:5px;}
-table{width:100%;border-collapse:collapse;margin-top:15px}
-th,td{border:1px solid #ccc;padding:10px;text-align:center}
-th{background:#e8f5e9}
-.delete{color:red;cursor:pointer; font-weight:bold;}
-button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; border:none; border-radius:5px; margin-top:15px; cursor:pointer; font-size:16px;}
+label{font-weight:bold; display:block; margin-top:15px; color:#333}
+input,select{width:100%;padding:12px;margin-top:5px; box-sizing:border-box; border:1px solid #ccc; border-radius:6px; font-size:14px}
+table{width:100%;border-collapse:collapse;margin-top:20px;background:#fff}
+th,td{border:1px solid #ddd;padding:12px;text-align:center}
+th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
+.delete{color:#d32f2f;cursor:pointer; font-weight:bold; font-size:18px}
+.action-btn {background:#2e7d32; color:white; padding:15px; width:100%; border:none; border-radius:6px; margin-top:20px; cursor:pointer; font-size:16px; font-weight:bold}
+.action-btn:hover{background:#1b5e20}
+.print-btn {background:#0d47a1; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🛒 Admin - Surana Ashok Kumar</h1>
+<h1>🛒 Admin Panel - Surana Ashok Kumar</h1>
 
 <section id="loginSection" class="active">
-<h3>Admin Login</h3>
+<h3>Admin Secure Access</h3>
 <input id="adminId" placeholder="Admin ID">
 <input id="adminPass" type="password" placeholder="Password">
-<button class="action-btn" onclick="login()">Login</button>
+<button class="action-btn" onclick="login()">Login to Dashboard</button>
 </section>
 
 <section id="mainSection">
 <nav>
 <button onclick="showTab('cat')">Categories</button>
-<button onclick="showTab('item')">Items</button>
-<button onclick="showTab('orders')">Orders</button>
+<button onclick="showTab('item')">Add Items</button>
+<button onclick="showTab('orders')">View Orders</button>
 <button onclick="showTab('cred')">Settings</button>
 </nav>
 
 <section id="cred">
-<h3>Change Login Credentials</h3>
+<h3>Update Admin Credentials</h3>
 <input id="newId" placeholder="New Admin ID">
 <input id="newPass" placeholder="New Password">
 <button class="action-btn" onclick="changeCred()">Update Credentials</button>
@@ -52,8 +55,10 @@ button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; bo
 
 <section id="cat">
 <h3>Manage Categories</h3>
-<input id="catEn" placeholder="Category (English)">
-<input id="catHi" placeholder="Category (Hindi)">
+<div style="display:flex; gap:10px;">
+  <input id="catEn" placeholder="Category (English) e.g. Dry Fruits">
+  <input id="catHi" placeholder="Category (Hindi) e.g. मेवा">
+</div>
 <button class="action-btn" onclick="addCategory()">Add Category</button>
 <table>
 <thead><tr><th>English</th><th>Hindi</th><th>Action</th></tr></thead>
@@ -62,20 +67,25 @@ button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; bo
 </section>
 
 <section id="item">
-<h3>Manage Items</h3>
-<label>Select Category</label>
+<h3>Manage Shop Items</h3>
+<label>1. Select Category</label>
 <select id="catSelect"></select>
 
-<label>Item Name (English)</label>
-<input id="itemEn" placeholder="e.g. Cashew">
+<div style="display:flex; gap:10px;">
+  <div style="flex:1">
+    <label>2. Item Name (English)</label>
+    <input id="itemEn" placeholder="e.g. Cashew Whole">
+  </div>
+  <div style="flex:1">
+    <label>3. Item Name (Hindi)</label>
+    <input id="itemHi" placeholder="e.g. काजू साबुत">
+  </div>
+</div>
 
-<label>Item Name (Hindi)</label>
-<input id="itemHi" placeholder="e.g. काजू">
-
-<label>Units (Choose up to 2)</label>
+<label>4. Units (Select up to 2)</label>
 <div style="display:flex; gap:10px;">
   <select id="unit1">
-    <option value="">-- Select --</option>
+    <option value="">-- Main Unit --</option>
     <option value="kg">Kg / किलो</option>
     <option value="gm">Gram / ग्राम</option>
     <option value="packet">Packet / पैकेट</option>
@@ -83,7 +93,7 @@ button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; bo
     <option value="litre">litre / लीटर</option>
   </select>
   <select id="unit2">
-    <option value="">-- Optional --</option>
+    <option value="">-- Optional Unit --</option>
     <option value="kg">Kg / किलो</option>
     <option value="gm">Gram / ग्राम</option>
     <option value="packet">Packet / पैकेट</option>
@@ -94,25 +104,24 @@ button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; bo
 
 <div style="display:flex; gap:10px;">
   <div style="flex:1">
-    <label>Min Qty</label>
+    <label>5. Min Order Qty</label>
     <input id="minQty" type="number" value="1">
   </div>
   <div style="flex:1">
-    <label>Max Qty</label>
+    <label>6. Max Order Qty</label>
     <input id="maxQty" type="number" value="100">
   </div>
 </div>
 
-<button class="action-btn" onclick="addItem()">Add Item to Shop</button>
+<button class="action-btn" onclick="addItem()">Add Item to Live Shop</button>
 
 <table>
 <thead>
 <tr>
 <th>Category</th>
-<th>English</th>
-<th>Hindi</th>
+<th>Item (Eng/Hi)</th>
 <th>Units</th>
-<th>Limits</th>
+<th>Limit</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -121,16 +130,16 @@ button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; bo
 </section>
 
 <section id="orders">
-<h3>Orders List</h3>
-<button onclick="loadOrders()">🔄 Refresh List</button>
+<h3>Recent Customer Orders</h3>
+<button class="action-btn" style="margin-bottom:20px;" onclick="loadOrders()">🔄 Refresh Order List</button>
 <table>
 <thead>
 <tr>
-<th>Order No</th>
+<th>Order #</th>
 <th>Customer</th>
-<th>Mobile</th>
-<th>Items</th>
-<th>Time</th>
+<th>Contact</th>
+<th>Items Summary</th>
+<th>Date</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -156,7 +165,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// LOGIN
+// LOGIN LOGIC
 window.login = async function(){
  const id = document.getElementById("adminId").value;
  const pass = document.getElementById("adminPass").value;
@@ -166,16 +175,16 @@ window.login = async function(){
    document.getElementById("loginSection").style.display="none";
    document.getElementById("mainSection").style.display="block";
    loadAll();
-  } else { alert("Wrong Credentials"); }
- } catch(e) { alert("Login Error: " + e.message); }
+  } else { alert("Invalid Credentials"); }
+ } catch(e) { alert("Database Error: " + e.message); }
 };
 
 window.changeCred = async function(){
  const id = document.getElementById("newId").value;
  const pass = document.getElementById("newPass").value;
- if(!id || !pass) return alert("Fill both fields");
+ if(!id || !pass) return alert("Please fill both fields");
  await setDoc(doc(db,"config","login"),{id, pass});
- alert("Credentials Updated!");
+ alert("Admin Login Updated!");
 };
 
 window.showTab = function(id){
@@ -183,15 +192,17 @@ window.showTab = function(id){
  document.getElementById(id).classList.add("active");
 };
 
-// CATEGORIES
+// CATEGORY MANAGEMENT
 window.addCategory = async function(){
  const en = document.getElementById("catEn").value;
  const hi = document.getElementById("catHi").value;
- if(!en || !hi) return alert("Enter names");
- await addDoc(collection(db,"categories"),{en, hi});
- document.getElementById("catEn").value = "";
- document.getElementById("catHi").value = "";
- loadCategories();
+ if(!en || !hi) return alert("Both English and Hindi names required");
+ try {
+  await addDoc(collection(db,"categories"),{en, hi});
+  document.getElementById("catEn").value = "";
+  document.getElementById("catHi").value = "";
+  loadCategories();
+ } catch(e) { alert("Error adding category: " + e.message); }
 };
 
 async function loadCategories(){
@@ -203,59 +214,43 @@ async function loadCategories(){
  list.sort((a,b)=> a.en.localeCompare(b.en));
 
  catTable.innerHTML = "";
- catSelect.innerHTML = "";
+ catSelect.innerHTML = "<option value=''>-- Select Category --</option>";
  list.forEach(c=>{
   catTable.innerHTML += `<tr><td>${c.en}</td><td>${c.hi}</td><td class="delete" onclick="delCat('${c.id}')">❌</td></tr>`;
   catSelect.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 }
-window.delCat = async (id) => { if(confirm("Delete Category?")){ await deleteDoc(doc(db,"categories",id)); loadCategories(); } };
+window.delCat = async (id) => { if(confirm("Permanently delete this category?")){ await deleteDoc(doc(db,"categories",id)); loadCategories(); } };
 
-// ITEMS
+// ITEM MANAGEMENT
 window.addItem = async function(){
-  console.log("Attempting to add item...");
-  try {
-    // 1. Manually grab every single value
-    const cat = document.getElementById("catSelect").value || "";
-    const en = document.getElementById("itemEn").value || "";
-    const hi = document.getElementById("itemHi").value || "";
-    const u1 = document.getElementById("unit1").value || "";
-    const u2 = document.getElementById("unit2").value || "";
-    const min = document.getElementById("minQty").value || "1";
-    const max = document.getElementById("maxQty").value || "100";
+ try {
+  const cat = document.getElementById("catSelect").value;
+  const en = document.getElementById("itemEn").value;
+  const hi = document.getElementById("itemHi").value;
+  const u1 = document.getElementById("unit1").value;
+  const u2 = document.getElementById("unit2").value;
+  const min = document.getElementById("minQty").value;
+  const max = document.getElementById("maxQty").value;
 
-    // 2. Strict Validation
-    if(!cat) { alert("Please select a Category first!"); return; }
-    if(!en || !hi || !u1) { alert("Please fill Item Name (Eng & Hindi) and Unit 1"); return; }
+  if(!cat || !en || !hi || !u1) return alert("Please fill all required fields (Category, Names, Unit 1)");
 
-    // 3. Prepare clean data (No hidden undefined values)
-    const itemData = {
-      cat: String(cat),
-      en: String(en),
-      hi: String(hi),
-      units: [u1, u2].filter(u => u !== ""),
-      minQty: Number(min),
-      maxQty: Number(max),
-      timestamp: new Date().toISOString()
-    };
+  const units = [u1, u2].filter(u => u !== "");
 
-    console.log("Saving this data:", itemData);
+  await addDoc(collection(db,"items"), {
+   cat: String(cat),
+   en: String(en),
+   hi: String(hi),
+   units: units,
+   minQty: Number(min),
+   maxQty: Number(max)
+  });
 
-    // 4. Send to Firebase
-    const docRef = await addDoc(collection(db, "items"), itemData);
-    
-    console.log("Saved successfully with ID:", docRef.id);
-    alert("✅ SUCCESS: " + en + " added to shop!");
-
-    // 5. Reset fields and refresh
-    document.getElementById("itemEn").value = "";
-    document.getElementById("itemHi").value = "";
-    loadItems();
-    
-  } catch (error) {
-    console.error("Firebase Error Details:", error);
-    alert("❌ Error: " + error.message);
-  }
+  alert("✅ Success: " + en + " added!");
+  document.getElementById("itemEn").value = "";
+  document.getElementById("itemHi").value = "";
+  loadItems();
+ } catch(e) { alert("Firebase Error: " + e.message); }
 };
 
 async function loadItems(){
@@ -269,34 +264,80 @@ async function loadItems(){
  list.forEach(i=>{
   itemTable.innerHTML += `<tr>
    <td>${i.cat}</td>
-   <td>${i.en}</td>
-   <td>${i.hi}</td>
+   <td>${i.en}<br><small>${i.hi}</small></td>
    <td>${(i.units||[]).join(", ")}</td>
    <td>${i.minQty}-${i.maxQty}</td>
    <td class="delete" onclick="delItem('${i.id}')">❌</td>
   </tr>`;
  });
 }
-window.delItem = async (id) => { if(confirm("Delete Item?")){ await deleteDoc(doc(db,"items",id)); loadItems(); } };
+window.delItem = async (id) => { if(confirm("Remove this item from shop?")){ await deleteDoc(doc(db,"items",id)); loadItems(); } };
 
-// ORDERS
+// ORDERS & PRINTING LOGIC
 window.loadOrders = async function(){
  const orderTable = document.getElementById("orderTable");
  let snap = await getDocs(collection(db,"orders"));
  orderTable.innerHTML = "";
  snap.forEach(d=>{
   let o = d.data();
+  const orderData = JSON.stringify(o).replace(/'/g, "\\'"); 
   orderTable.innerHTML += `<tr>
    <td>${o.code}</td>
    <td>${o.name}</td>
    <td>${o.mobile}</td>
-   <td><small>${o.items}</small></td>
+   <td><small>${o.items.substring(0,50)}...</small></td>
    <td>${o.time}</td>
-   <td class="delete" onclick="delOrder('${d.id}')">❌</td>
+   <td>
+     <button class="print-btn" onclick='printOrder(${orderData})'>Print Bill</button>
+     <span class="delete" onclick="delOrder('${d.id}')" style="margin-left:10px;">❌</span>
+   </td>
   </tr>`;
  });
 };
-window.delOrder = async (id) => { if(confirm("Remove Order?")){ await deleteDoc(doc(db,"orders",id)); loadOrders(); } };
+
+window.printOrder = function(o) {
+  const printWindow = window.open('', '_blank');
+  let itemRows = "";
+  const lines = o.items.split('\n');
+  
+  lines.forEach(line => {
+    if(line.trim() === "") return;
+    const mainParts = line.split(',');
+    const itemAndQty = mainParts[0] || "";
+    const packetPart = mainParts[1] ? mainParts[1].replace('पैकेट:', '').trim() : "1";
+    const lastSpaceIndex = itemAndQty.lastIndexOf(' ');
+    const itemName = itemAndQty.substring(0, lastSpaceIndex).trim();
+    const qtyValue = itemAndQty.substring(lastSpaceIndex).trim();
+    
+    itemRows += `<tr><td style="border:1px solid #000;padding:12px;text-align:left;">${itemName}</td><td style="border:1px solid #000;padding:12px;">${qtyValue}</td><td style="border:1px solid #000;padding:12px;">${packetPart}</td><td style="border:1px solid #000;padding:12px;"></td></tr>`;
+  });
+
+  for(let i=0; i<4; i++) {
+    itemRows += `<tr style="height:45px;"><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td><td style="border:1px solid #000;"></td></tr>`;
+  }
+
+  printWindow.document.write(`
+    <html><head><title>Order_${o.code}</title><style>
+    body{font-family:Arial;padding:10px}.bill-container{border:2px solid #000;padding:20px}
+    table{width:100%;border-collapse:collapse;margin-top:15px}th,td{border:1px solid #000;padding:8px;text-align:center}
+    th:nth-child(1),td:nth-child(1){width:45%}th:nth-child(2),td:nth-child(2){width:15%}
+    th:nth-child(3),td:nth-child(3){width:15%}th:nth-child(4),td:nth-child(4){width:25%}
+    .info-table{border:none;width:100%;margin:15px 0}.info-table td{border:none;text-align:left;font-size:14px}
+    </style></head><body onload="window.print()"><div class="bill-container">
+    <div style="text-align:center;border-bottom:2px double #000;padding-bottom:10px">
+    <h1 style="margin:0">SURANA ASHOK KUMAR ARVIND KUMAR</h1>
+    <p style="margin:5px">मिर्ची बाजार, जोधपुर | मोबाइल: 9462439993, 9587005556</p></div>
+    <table class="info-table"><tr><td><strong>Order No:</strong> ${o.code}</td><td style="text-align:right;"><strong>Date:</strong> ${o.time}</td></tr>
+    <tr><td><strong>Customer:</strong> ${o.name}</td><td style="text-align:right;"><strong>Delivery:</strong> ${o.type || 'Home Delivery'}</td></tr>
+    <tr><td><strong>Mobile:</strong> ${o.mobile}</td><td style="text-align:right;"><strong>Address:</strong> ${o.address}</td></tr></table>
+    <table><thead><tr style="background:#f2f2f2;"><th>Item (सामान)</th><th>Qty</th><th>Pkts</th><th>Price (कीमत)</th></tr></thead>
+    <tbody>${itemRows}</tbody></table>
+    <div style="margin-top:30px;text-align:right;"><p style="font-size:18px;"><strong>TOTAL AMOUNT: ₹ _______________</strong></p></div>
+    </div></body></html>`);
+  printWindow.document.close();
+};
+
+window.delOrder = async (id) => { if(confirm("Delete this order?")){ await deleteDoc(doc(db,"orders",id)); loadOrders(); } };
 
 async function loadAll(){ loadCategories(); loadItems(); loadOrders(); }
 </script>
