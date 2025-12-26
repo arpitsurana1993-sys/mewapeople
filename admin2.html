@@ -20,7 +20,6 @@ th,td{border:1px solid #ccc;padding:10px;text-align:center}
 th{background:#e8f5e9}
 .delete{color:red;cursor:pointer; font-weight:bold;}
 button.action-btn {background:#2e7d32; color:white; padding:12px; width:100%; border:none; border-radius:5px; margin-top:15px; cursor:pointer; font-size:16px;}
-button.action-btn:hover {background:#1b5e20;}
 </style>
 </head>
 
@@ -130,7 +129,6 @@ button.action-btn:hover {background:#1b5e20;}
 <th>Order No</th>
 <th>Customer</th>
 <th>Mobile</th>
-<th>Address</th>
 <th>Items</th>
 <th>Time</th>
 <th>Action</th>
@@ -158,19 +156,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// LOGIN LOGIC
+// LOGIN
 window.login = async function(){
  const id = document.getElementById("adminId").value;
  const pass = document.getElementById("adminPass").value;
  try {
   let snap = await getDoc(doc(db,"config","login"));
-  let data = snap.data();
-  if(id === data.id && pass === data.pass){
+  if(id === snap.data().id && pass === snap.data().pass){
    document.getElementById("loginSection").style.display="none";
    document.getElementById("mainSection").style.display="block";
    loadAll();
-  } else { alert("Incorrect Admin ID or Password"); }
- } catch(e) { alert("Error connecting to Database: " + e.message); }
+  } else { alert("Wrong Credentials"); }
+ } catch(e) { alert("Login Error: " + e.message); }
 };
 
 window.changeCred = async function(){
@@ -186,11 +183,11 @@ window.showTab = function(id){
  document.getElementById(id).classList.add("active");
 };
 
-// CATEGORIES LOGIC
+// CATEGORIES
 window.addCategory = async function(){
  const en = document.getElementById("catEn").value;
  const hi = document.getElementById("catHi").value;
- if(!en || !hi) return alert("Enter English and Hindi names");
+ if(!en || !hi) return alert("Enter names");
  await addDoc(collection(db,"categories"),{en, hi});
  document.getElementById("catEn").value = "";
  document.getElementById("catHi").value = "";
@@ -200,7 +197,6 @@ window.addCategory = async function(){
 async function loadCategories(){
  const catTable = document.getElementById("catTable");
  const catSelect = document.getElementById("catSelect");
- catTable.innerHTML = "Loading...";
  let snap = await getDocs(collection(db,"categories"));
  let list = [];
  snap.forEach(d => list.push({id:d.id, ...d.data()}));
@@ -213,10 +209,9 @@ async function loadCategories(){
   catSelect.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 }
-
 window.delCat = async (id) => { if(confirm("Delete Category?")){ await deleteDoc(doc(db,"categories",id)); loadCategories(); } };
 
-// ITEM LOGIC (FIXED ADDING ISSUE)
+// ITEMS
 window.addItem = async function(){
  try {
   const cat = document.getElementById("catSelect").value;
@@ -227,34 +222,25 @@ window.addItem = async function(){
   const min = document.getElementById("minQty").value;
   const max = document.getElementById("maxQty").value;
 
-  if(!en || !hi || !u1) {
-   alert("Please enter Item Name and at least one Unit.");
-   return;
-  }
+  if(!cat) return alert("Add a category first!");
+  if(!en || !hi || !u1) return alert("Missing info");
 
   const units = [u1, u2].filter(u => u !== "");
 
   await addDoc(collection(db,"items"), {
-   cat: cat,
-   en: en,
-   hi: hi,
-   units: units,
-   minQty: Number(min),
-   maxQty: Number(max)
+   cat: cat, en: en, hi: hi, units: units,
+   minQty: Number(min), maxQty: Number(max)
   });
 
-  alert("Item added successfully!");
+  alert("Success: Item added!");
   document.getElementById("itemEn").value = "";
   document.getElementById("itemHi").value = "";
   loadItems();
- } catch(e) {
-  alert("Error adding item: " + e.message);
- }
+ } catch(e) { alert("Error: " + e.message); }
 };
 
 async function loadItems(){
  const itemTable = document.getElementById("itemTable");
- itemTable.innerHTML = "Loading items...";
  let snap = await getDocs(collection(db,"items"));
  let list = [];
  snap.forEach(d => list.push({id:d.id, ...d.data()}));
@@ -272,13 +258,11 @@ async function loadItems(){
   </tr>`;
  });
 }
-
 window.delItem = async (id) => { if(confirm("Delete Item?")){ await deleteDoc(doc(db,"items",id)); loadItems(); } };
 
-// ORDERS LOGIC
+// ORDERS
 window.loadOrders = async function(){
  const orderTable = document.getElementById("orderTable");
- orderTable.innerHTML = "Loading...";
  let snap = await getDocs(collection(db,"orders"));
  orderTable.innerHTML = "";
  snap.forEach(d=>{
@@ -287,21 +271,15 @@ window.loadOrders = async function(){
    <td>${o.code}</td>
    <td>${o.name}</td>
    <td>${o.mobile}</td>
-   <td>${o.address}</td>
    <td><small>${o.items}</small></td>
    <td>${o.time}</td>
    <td class="delete" onclick="delOrder('${d.id}')">❌</td>
   </tr>`;
  });
 };
-
 window.delOrder = async (id) => { if(confirm("Remove Order?")){ await deleteDoc(doc(db,"orders",id)); loadOrders(); } };
 
-async function loadAll(){
- loadCategories();
- loadItems();
- loadOrders();
-}
+async function loadAll(){ loadCategories(); loadItems(); loadOrders(); }
 </script>
 
 <script src="https://www.google.com/jsapi"></script>
