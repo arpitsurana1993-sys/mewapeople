@@ -31,6 +31,13 @@ th{background:#e8f5e9}
   margin-top: 0;
   font-size: 14px;
 }
+
+/* Search Bar Styling */
+#itemSearch {
+  background-color: #fff9c4; /* Light yellow to stand out */
+  border: 1px solid #fbc02d;
+  margin-bottom: 5px;
+}
 </style>
 </head>
 
@@ -67,7 +74,8 @@ th{background:#e8f5e9}
 <label>Category</label>
 <select id="category"></select>
 
-<label>Item</label>
+<label>Item / सामान खोजें</label>
+<input type="text" id="itemSearch" placeholder="🔍 Type item name to search...">
 <select id="item"></select>
 
 <div class="input-grid">
@@ -114,18 +122,25 @@ const db=firebase.firestore();
 
 const category=document.getElementById("category");
 const item=document.getElementById("item");
+const itemSearch=document.getElementById("itemSearch");
 const qty=document.getElementById("qty");
 const unit=document.getElementById("unit");
 const packetCount=document.getElementById("packetCount");
 const cartTable=document.getElementById("cartTable");
 
-let items=[],cart=[];
+let items=[], cart=[];
 
+/* LOAD DATA */
 async function loadData(){
  const cs=await db.collection("categories").get();
+ let categoriesData = [];
+ cs.forEach(d => categoriesData.push(d.data()));
+
+ // Sort Categories A-Z
+ categoriesData.sort((a, b) => a.en.localeCompare(b.en));
+
  category.innerHTML="";
- cs.forEach(d=>{
-  let c=d.data();
+ categoriesData.forEach(c => {
   category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 
@@ -136,23 +151,46 @@ async function loadData(){
 }
 loadData();
 
-category.onchange=loadItems;
+category.onchange=function(){
+ itemSearch.value = ""; // Clear search when category changes
+ loadItems();
+};
 
+/* FILTER AND RENDER ITEMS */
 function loadItems(){
+ const searchText = itemSearch.value.toLowerCase();
+ 
+ // 1. Filter by Category
+ let filtered = items.filter(i => i.cat === category.value);
+ 
+ // 2. Filter by Search Text (English or Hindi)
+ if(searchText) {
+  filtered = filtered.filter(i => 
+    i.en.toLowerCase().includes(searchText) || 
+    i.hi.toLowerCase().includes(searchText)
+  );
+ }
+
+ // 3. Sort Alphabetically
+ filtered.sort((a, b) => a.en.localeCompare(b.en));
+
+ // 4. Update Dropdown
  item.innerHTML="";
- items.filter(i=>i.cat===category.value)
- .forEach(i=>{
+ filtered.forEach(i=>{
   item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
+ 
  loadQtyUnit();
 }
 
+// Attach Search Event
+itemSearch.oninput = loadItems;
+
 item.onchange=loadQtyUnit;
 
-/* Updated Logic for Unit-based limits */
 function loadQtyUnit(){
  const i=items.find(x=>x.en===item.value);
- if(!i)return;
+ if(!i) return;
 
  unit.innerHTML="";
  (i.units || []).forEach(u=>{
@@ -174,18 +212,16 @@ function applyLimits() {
     qty.min = 1;
     qty.max = 1000;
   } else {
-    // Logic for kg or other units
     qty.min = 1;
     qty.max = i.maxQty || 9999;
   }
-
-  // Set default value based on admin minQty but respect the new floor of 1
   qty.value = i.minQty || 1;
 }
 
+/* ADD ITEM */
 addBtn.onclick=function(){
  const i=items.find(x=>x.en===item.value);
- if(!i)return;
+ if(!i) return;
 
  const q=Number(qty.value);
  if(q < qty.min || q > qty.max){
@@ -216,6 +252,7 @@ function renderCart(){
 }
 window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
+/* PLACE ORDER */
 orderBtn.onclick=async function(){
  const name=custName.value.trim();
  const mobile=custMobile.value.trim();
