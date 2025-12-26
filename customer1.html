@@ -10,12 +10,27 @@ body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
 .container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
 h2{text-align:center;color:#1b5e20}
 label{font-weight:bold;margin-top:10px;display:block}
-input,select,textarea,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
-.row{display:flex;gap:8px;align-items:center}
+input,select,textarea,button{width:100%;padding:10px;margin-top:5px;font-size:16px;box-sizing:border-box}
 button{background:#2e7d32;color:#fff;border:none;border-radius:25px;margin-top:15px;cursor:pointer}
 table{width:100%;margin-top:10px;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
 th{background:#e8f5e9}
+
+/* Layout for Unit, Weight, and Packets */
+.input-grid {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.input-group label {
+  margin-top: 0;
+  font-size: 14px;
+}
 </style>
 </head>
 
@@ -55,14 +70,19 @@ th{background:#e8f5e9}
 <label>Item</label>
 <select id="item"></select>
 
-<label>Unit</label>
-<div class="row">
-  <select id="unit"></select>
-  <label>Weight</label>
- <input id="qty" type="number" min="1">
-<label>No Of Packets</label>
- <input id="packetCount" type="number" min="1" value="1"
-  style="width:90px" placeholder="Packets">
+<div class="input-grid">
+  <div class="input-group">
+    <label>Unit</label>
+    <select id="unit"></select>
+  </div>
+  <div class="input-group">
+    <label>Weight</label>
+    <input id="qty" type="number" min="1">
+  </div>
+  <div class="input-group">
+    <label>Packets</label>
+    <input id="packetCount" type="number" min="1" value="1" placeholder="Packets">
+  </div>
 </div>
 
 <button id="addBtn">Add Item</button>
@@ -78,7 +98,6 @@ th{background:#e8f5e9}
 
 </div>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -131,7 +150,6 @@ function loadItems(){
 
 item.onchange=loadQtyUnit;
 
-/* ✅ ONLY REQUIRED CHANGE */
 function loadQtyUnit(){
  const i=items.find(x=>x.en===item.value);
  if(!i)return;
