@@ -213,30 +213,49 @@ window.delCat = async (id) => { if(confirm("Delete Category?")){ await deleteDoc
 
 // ITEMS
 window.addItem = async function(){
- try {
-  const cat = document.getElementById("catSelect").value;
-  const en = document.getElementById("itemEn").value;
-  const hi = document.getElementById("itemHi").value;
-  const u1 = document.getElementById("unit1").value;
-  const u2 = document.getElementById("unit2").value;
-  const min = document.getElementById("minQty").value;
-  const max = document.getElementById("maxQty").value;
+  console.log("Attempting to add item...");
+  try {
+    // 1. Manually grab every single value
+    const cat = document.getElementById("catSelect").value || "";
+    const en = document.getElementById("itemEn").value || "";
+    const hi = document.getElementById("itemHi").value || "";
+    const u1 = document.getElementById("unit1").value || "";
+    const u2 = document.getElementById("unit2").value || "";
+    const min = document.getElementById("minQty").value || "1";
+    const max = document.getElementById("maxQty").value || "100";
 
-  if(!cat) return alert("Add a category first!");
-  if(!en || !hi || !u1) return alert("Missing info");
+    // 2. Strict Validation
+    if(!cat) { alert("Please select a Category first!"); return; }
+    if(!en || !hi || !u1) { alert("Please fill Item Name (Eng & Hindi) and Unit 1"); return; }
 
-  const units = [u1, u2].filter(u => u !== "");
+    // 3. Prepare clean data (No hidden undefined values)
+    const itemData = {
+      cat: String(cat),
+      en: String(en),
+      hi: String(hi),
+      units: [u1, u2].filter(u => u !== ""),
+      minQty: Number(min),
+      maxQty: Number(max),
+      timestamp: new Date().toISOString()
+    };
 
-  await addDoc(collection(db,"items"), {
-   cat: cat, en: en, hi: hi, units: units,
-   minQty: Number(min), maxQty: Number(max)
-  });
+    console.log("Saving this data:", itemData);
 
-  alert("Success: Item added!");
-  document.getElementById("itemEn").value = "";
-  document.getElementById("itemHi").value = "";
-  loadItems();
- } catch(e) { alert("Error: " + e.message); }
+    // 4. Send to Firebase
+    const docRef = await addDoc(collection(db, "items"), itemData);
+    
+    console.log("Saved successfully with ID:", docRef.id);
+    alert("✅ SUCCESS: " + en + " added to shop!");
+
+    // 5. Reset fields and refresh
+    document.getElementById("itemEn").value = "";
+    document.getElementById("itemHi").value = "";
+    loadItems();
+    
+  } catch (error) {
+    console.error("Firebase Error Details:", error);
+    alert("❌ Error: " + error.message);
+  }
 };
 
 async function loadItems(){
