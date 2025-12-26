@@ -13,11 +13,12 @@ nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
 nav button{padding:10px 15px;border:none;border-radius:20px;background:#2e7d32;color:#fff;cursor:pointer}
 section{display:none}
 section.active{display:block}
-input,select{width:100%;padding:8px;margin-top:5px}
+label{font-weight:bold; display:block; margin-top:10px;}
+input,select{width:100%;padding:8px;margin-top:5px; box-sizing:border-box;}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #ccc;padding:8px;text-align:center}
 th{background:#e8f5e9}
-.delete{color:red;cursor:pointer}
+.delete{color:red;cursor:pointer; font-weight:bold;}
 </style>
 </head>
 
@@ -26,16 +27,14 @@ th{background:#e8f5e9}
 
 <h1>🛒 Surana Ashok Kumar Arvind Kumar – Admin</h1>
 
-<!-- LOGIN -->
 <section id="loginSection" class="active">
 <h3>Admin Login</h3>
 <input id="adminId" placeholder="Admin ID">
 <input id="adminPass" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<button onclick="login()" style="width:100%; margin-top:10px; padding:10px; background:#2e7d32; color:white; border:none; border-radius:5px;">Login</button>
 </section>
 
-<!-- MAIN -->
-<section id="mainSection">
+<section id="mainSection" style="display:none;">
 
 <nav>
 <button onclick="showTab('cred')">Change Login</button>
@@ -44,20 +43,18 @@ th{background:#e8f5e9}
 <button onclick="showTab('orders')">Orders</button>
 </nav>
 
-<!-- CHANGE LOGIN -->
 <section id="cred">
 <h3>Change Login Credentials</h3>
 <input id="newId" placeholder="New Admin ID">
 <input id="newPass" placeholder="New Password">
-<button onclick="changeCred()">Update</button>
+<button onclick="changeCred()" style="margin-top:10px;">Update</button>
 </section>
 
-<!-- CATEGORIES -->
 <section id="cat">
 <h3>Categories</h3>
 <input id="catEn" placeholder="Category (English)">
 <input id="catHi" placeholder="Category (Hindi – type English)">
-<button onclick="addCategory()">Add</button>
+<button onclick="addCategory()" style="margin-top:10px;">Add Category</button>
 
 <table>
 <thead><tr><th>English</th><th>Hindi</th><th>❌</th></tr></thead>
@@ -65,7 +62,6 @@ th{background:#e8f5e9}
 </table>
 </section>
 
-<!-- ITEMS -->
 <section id="item">
 <h3>Items</h3>
 
@@ -78,7 +74,6 @@ th{background:#e8f5e9}
 <label>Item (Hindi – type English)</label>
 <input id="itemHi">
 
-<!-- 🔹 ONLY CHANGE: multiple unit selection -->
 <label>Allowed Units (Select up to 2)</label>
 <select id="unit1">
   <option value="">-- Select --</option>
@@ -98,13 +93,13 @@ th{background:#e8f5e9}
   <option value="litre">litre / लीटर</option>
 </select>
 
-<label>Minimum Quantity</label>
+<label>Minimum Weight/Qty</label>
 <input id="minQty" type="number" min="1" value="1">
 
-<label>Maximum Quantity</label>
-<input id="maxQty" type="number" min="1" value="1">
+<label>Maximum Weight/Qty (For KG/Litre/Packet)</label>
+<input id="maxQty" type="number" min="1" value="100">
 
-<button onclick="addItem()">Add Item</button>
+<button onclick="addItem()" style="margin-top:15px; background:#1b5e20; color:white; padding:10px; width:100%; border:none; border-radius:5px;">Add Item</button>
 
 <table>
 <thead>
@@ -113,7 +108,7 @@ th{background:#e8f5e9}
 <th>English</th>
 <th>Hindi</th>
 <th>Units</th>
-<th>Qty Options</th>
+<th>Min/Max</th>
 <th>❌</th>
 </tr>
 </thead>
@@ -121,9 +116,9 @@ th{background:#e8f5e9}
 </table>
 </section>
 
-<!-- ORDERS -->
 <section id="orders">
 <h3>Orders</h3>
+<button onclick="loadOrders()" style="margin-bottom:10px;">🔄 Refresh Orders</button>
 <table>
 <thead>
 <tr>
@@ -144,7 +139,6 @@ th{background:#e8f5e9}
 </section>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -166,96 +160,120 @@ window.login = async function(){
  let snap = await getDoc(doc(db,"config","login"));
  let data = snap.data();
  if(adminId.value===data.id && adminPass.value===data.pass){
-  loginSection.style.display="none";
-  mainSection.style.display="block";
+  document.getElementById("loginSection").style.display="none";
+  document.getElementById("mainSection").style.display="block";
   loadAll();
  } else alert("Wrong login");
 };
 
 window.changeCred = async function(){
- await setDoc(doc(db,"config","login"),{id:newId.value,pass:newPass.value});
- alert("Updated");
+ if(!newId.value || !newPass.value) return alert("Fill both fields");
+ await setDoc(doc(db,"config","login"),{id:newId.value, pass:newPass.value});
+ alert("Credentials Updated");
 };
 
 /* NAV */
 window.showTab=function(id){
- document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.querySelectorAll("#mainSection > section").forEach(s=>s.classList.remove("active"));
  document.getElementById(id).classList.add("active");
 };
 
 /* CATEGORY */
 window.addCategory=async function(){
- await addDoc(collection(db,"categories"),{en:catEn.value,hi:catHi.value});
+ if(!catEn.value || !catHi.value) return alert("Fill all fields");
+ await addDoc(collection(db,"categories"),{en:catEn.value, hi:catHi.value});
  catEn.value=catHi.value="";
  loadCategories();
 };
 
 async function loadCategories(){
- catTable.innerHTML="";
+ const catTable = document.getElementById("catTable");
+ const catSelect = document.getElementById("catSelect");
+ catTable.innerHTML="Loading...";
  catSelect.innerHTML="";
+ 
  let snap=await getDocs(collection(db,"categories"));
- snap.forEach(d=>{
-  let c=d.data();
+ let list = [];
+ snap.forEach(d => list.push({id:d.id, ...d.data()}));
+ 
+ // Alphabetical Sort
+ list.sort((a,b)=> a.en.localeCompare(b.en));
+
+ catTable.innerHTML="";
+ list.forEach(c=>{
   catTable.innerHTML+=`<tr>
    <td>${c.en}</td>
    <td>${c.hi}</td>
-   <td class="delete" onclick="delCat('${d.id}')">❌</td>
+   <td class="delete" onclick="delCat('${c.id}')">❌</td>
   </tr>`;
   catSelect.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
  });
 }
 window.delCat=async id=>{
- await deleteDoc(doc(db,"categories",id));
- loadCategories();
+ if(confirm("Delete this category?")) {
+  await deleteDoc(doc(db,"categories",id));
+  loadCategories();
+ }
 };
 
-/* ITEMS — ONLY UNIT LOGIC UPDATED */
+/* ITEMS */
 window.addItem = async function(){
- const qtyArr = allowedQty.value
-  .split(",")
-  .map(q=>Number(q.trim()))
-  .filter(q=>q>0);
+ if(!itemEn.value || !itemHi.value || !unit1.value) return alert("Select Category, Item names and at least one Unit");
 
- const units = Array.from(allowedUnit.selectedOptions)
-  .map(o=>o.value)
-  .slice(0,2); // max 2 units only
+ // Collect units from both dropdowns
+ const units = [unit1.value, unit2.value].filter(u => u !== "");
 
  await addDoc(collection(db,"items"),{
-  cat: catSelect.value,
+  cat: document.getElementById("catSelect").value,
   en: itemEn.value,
   hi: itemHi.value,
   units: units,
-  qty: qtyArr
+  minQty: Number(minQty.value),
+  maxQty: Number(maxQty.value)
  });
 
- itemEn.value=itemHi.value=allowedQty.value="";
+ // Clear inputs
+ itemEn.value=itemHi.value="";
+ unit1.value=unit2.value="";
  loadItems();
 };
 
 async function loadItems(){
- itemTable.innerHTML="";
+ const itemTable = document.getElementById("itemTable");
+ itemTable.innerHTML="Loading...";
+ 
  let snap=await getDocs(collection(db,"items"));
- snap.forEach(d=>{
-  let i=d.data();
+ let list = [];
+ snap.forEach(d => list.push({id:d.id, ...d.data()}));
+
+ // Alphabetical Sort
+ list.sort((a,b)=> a.en.localeCompare(b.en));
+
+ itemTable.innerHTML="";
+ list.forEach(i=>{
   itemTable.innerHTML+=`<tr>
    <td>${i.cat}</td>
    <td>${i.en}</td>
    <td>${i.hi}</td>
    <td>${(i.units||[]).join(", ")}</td>
-   <td>${(i.qty||[]).join(", ")}</td>
-   <td class="delete" onclick="delItem('${d.id}')">❌</td>
+   <td>${i.minQty} - ${i.maxQty}</td>
+   <td class="delete" onclick="delItem('${i.id}')">❌</td>
   </tr>`;
  });
 }
 window.delItem=async id=>{
- await deleteDoc(doc(db,"items",id));
- loadItems();
+ if(confirm("Delete this item?")) {
+  await deleteDoc(doc(db,"items",id));
+  loadItems();
+ }
 };
 
 /* ORDERS */
-async function loadOrders(){
- orderTable.innerHTML="";
+window.loadOrders = async function(){
+ const orderTable = document.getElementById("orderTable");
+ orderTable.innerHTML="Loading...";
  let snap=await getDocs(collection(db,"orders"));
+ orderTable.innerHTML="";
  snap.forEach(d=>{
   let o=d.data();
   orderTable.innerHTML+=`<tr>
@@ -264,15 +282,17 @@ async function loadOrders(){
 <td>${o.mobile}</td>
 <td>${o.address}</td>
 <td>${o.type}</td>
-<td>${o.items}</td>
+<td><small>${o.items}</small></td>
 <td>${o.time}</td>
 <td class="delete" onclick="delOrder('${d.id}')">❌</td>
 </tr>`;
  });
 }
 window.delOrder=async id=>{
- await deleteDoc(doc(db,"orders",id));
- loadOrders();
+ if(confirm("Delete order record?")) {
+  await deleteDoc(doc(db,"orders",id));
+  loadOrders();
+ }
 };
 
 async function loadAll(){
@@ -283,7 +303,6 @@ async function loadAll(){
 }
 </script>
 
-<!-- GOOGLE HINDI PHONETIC -->
 <script src="https://www.google.com/jsapi"></script>
 <script>
 google.load("elements","1",{packages:"transliteration"});
