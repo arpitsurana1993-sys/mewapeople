@@ -79,16 +79,30 @@ th{background:#e8f5e9}
 <input id="itemHi">
 
 <!-- 🔹 ONLY CHANGE: multiple unit selection -->
-<label>Allowed Units (select max 2)</label>
-<select id="allowedUnit" multiple>
+<label>Allowed Units (Select up to 2)</label>
+<select id="unit1">
+  <option value="">-- Select --</option>
   <option value="kg">Kg / किलो</option>
   <option value="gm">Gram / ग्राम</option>
   <option value="packet">Packet / पैकेट</option>
   <option value="piece">Piece / पीस</option>
+  <option value="litre">litre / लीटर</option>
 </select>
 
-<label>Allowed Quantities (comma separated)</label>
-<input id="allowedQty" placeholder="1,2,3,4,5">
+<select id="unit2" style="margin-top:6px">
+  <option value="">-- Optional --</option>
+  <option value="kg">Kg / किलो</option>
+  <option value="gm">Gram / ग्राम</option>
+  <option value="packet">Packet / पैकेट</option>
+  <option value="piece">Piece / पीस</option>
+  <option value="litre">litre / लीटर</option>
+</select>
+
+<label>Minimum Quantity</label>
+<input id="minQty" type="number" min="1" value="1">
+
+<label>Maximum Quantity</label>
+<input id="maxQty" type="number" min="1" value="1">
 
 <button onclick="addItem()">Add Item</button>
 
