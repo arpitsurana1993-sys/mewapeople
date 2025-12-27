@@ -81,11 +81,8 @@ th{background:#e8f5e9}
   <div class="input-group">
     <label>Weight</label>
     <input id="qty" type="number" min="1">
-    <div class="input-group">
-    <label>Weight</label>
-    <input id="qty" type="number">
+    
     <div id="limitHint"></div> 
-</div>
   </div>
   <div class="input-group">
     <label>Packets</label>
@@ -233,7 +230,6 @@ if (q < qty.min || q > qty.max) {
     alert(`Error: For ${unit.value}, Quantity must be ${qty.min} to ${qty.max}`); 
     return; 
 }
-
  cart.push({
   hi:i.hi,
   qty:q,
