@@ -410,8 +410,8 @@ window.printOrder = function(o) {
     const itemAndQty = mainParts[0] || "";
     const packetPart = mainParts[1] ? mainParts[1].replace('पैकेट:', '').trim() : "1";
     const lastSpaceIndex = itemAndQty.lastIndexOf(' ');
-    const itemName = itemAndQty.substring(0, lastSpaceIndex).trim();
-    const qtyValue = itemAndQty.substring(lastSpaceIndex).trim();
+    const itemName = itemAndQty.substring(0, lastSpaceIndex - 2).trim();
+    const qtyValue = itemAndQty.substring(lastSpaceIndex -2).trim();
     itemRows += `<tr><td style="border:1px solid #000;padding:12px;text-align:left;">${itemName}</td><td style="border:1px solid #000;padding:12px;">${qtyValue}</td><td style="border:1px solid #000;padding:12px;">${packetPart}</td><td style="border:1px solid #000;padding:12px;"></td></tr>`;
   });
   for(let i=0; i<4; i++) {
