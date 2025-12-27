@@ -409,9 +409,11 @@ window.printOrder = function(o) {
     const mainParts = line.split(',');
     const itemAndQty = mainParts[0] || "";
     const packetPart = mainParts[1] ? mainParts[1].replace('पैकेट:', '').trim() : "1";
-    const lastSpaceIndex = itemAndQty.lastIndexOf(' ');
-    const itemName = itemAndQty.substring(0, lastSpaceIndex - 3).trim();
-    const qtyValue = itemAndQty.substring(lastSpaceIndex -3).trim();
+    const parts = itemAndQty.trim().split(' ');
+    const unitPart = parts.pop(); // Gets 'kg' or 'gm'
+    const qtyPart = parts.pop();  // Gets the number (e.g. '500')
+    const itemName = parts.join(' '); // Joins everything else back (e.g. 'Cashew Whole')
+    const qtyValue = qtyPart + " " + unitPart;
     itemRows += `<tr><td style="border:1px solid #000;padding:12px;text-align:left;">${itemName}</td><td style="border:1px solid #000;padding:12px;">${qtyValue}</td><td style="border:1px solid #000;padding:12px;">${packetPart}</td><td style="border:1px solid #000;padding:12px;"></td></tr>`;
   });
   for(let i=0; i<4; i++) {
