@@ -25,246 +25,245 @@ th{background:#e8f5e9;color:#2e7d32}
 #itemSearch {background-color: #fff9c4;border: 2px solid #fbc02d;font-weight: bold}
 #orderBtn {background:#0d47a1;height: 55px;font-size: 18px}
 .delete-btn {color:#d32f2f; cursor:pointer; font-size: 20px}
+
+/* Confirmation Modal Styling */
+#overlay {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center; padding:10px; box-sizing:border-box}
+#modal {background:#fff; padding:20px; border-radius:12px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto}
+#modal h3 {margin-top:0; color:#1b5e20; border-bottom:2px solid #f1f8e9; padding-bottom:10px}
+.summary-line {margin:8px 0; font-size:15px}
+.modal-btns {display:flex; gap:10px; margin-top:20px}
+.btn-edit {background:#666; flex:1}
+.btn-confirm {background:#2e7d32; flex:2}
 </style>
 </head>
 
 <body>
+
+<div id="overlay">
+    <div id="modal">
+        <h3>📋 Review Your Order</h3>
+        <div id="summaryContent"></div>
+        <div class="modal-btns">
+            <button class="btn-edit" onclick="closeModal()">Edit Order</button>
+            <button class="btn-confirm" onclick="finalSubmit()">Send to WhatsApp</button>
+        </div>
+    </div>
+</div>
+
 <div class="container">
+    <h2>🛒 Surana Ashok Kumar</h2>
+    <div class="shop-info">
+        📍 मिर्ची बाजार, जोधपुर | 📞 9462439993
+    </div>
 
-<h2>🛒 Surana Ashok Kumar</h2>
-<div class="shop-info">
-    📍 मिर्ची बाजार, जोधपुर | 📞 9462439993
-</div>
+    <label>Customer Name / नाम *</label>
+    <input id="custName" placeholder="Enter your name" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
-<label>Customer Name / नाम *</label>
-<input id="custName" placeholder="Enter your name" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
+    <label>Mobile / मोबाइल *</label>
+    <input id="custMobile" inputmode="numeric" maxlength="10" placeholder="10 digit mobile number" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
-<label>Mobile / मोबाइल *</label>
-<input id="custMobile" inputmode="numeric" placeholder="10 digit mobile number" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    <label>Address / पता *</label>
+    <textarea id="custAddress" rows="2" placeholder="Full address for delivery"></textarea>
 
-<label>Address / पता *</label>
-<textarea id="custAddress" rows="2" placeholder="Full address for delivery"></textarea>
+    <label>Delivery Type</label>
+    <select id="deliveryType">
+        <option>Home Delivery</option>
+        <option>Pick from Shop</option>
+    </select>
 
-<label>Delivery Type</label>
-<select id="deliveryType">
- <option>Home Delivery</option>
- <option>Pick from Shop</option>
-</select>
+    <hr style="margin-top:20px; border:0; border-top:1px solid #eee">
 
-<hr style="margin-top:20px; border:0; border-top:1px solid #eee">
+    <label>1. Select Category</label>
+    <select id="category"></select>
 
-<label>1. Select Category</label>
-<select id="category"></select>
+    <label>2. Search & Select Item</label>
+    <input type="text" id="itemSearch" placeholder="🔍 Type item name (English or Hindi)...">
+    <select id="item" style="margin-top:8px"></select>
 
-<label>2. Search & Select Item</label>
-<input type="text" id="itemSearch" placeholder="🔍 Type item name (English or Hindi)...">
-<select id="item" style="margin-top:8px"></select>
+    <div class="input-grid">
+        <div class="input-group">
+            <label>Unit</label>
+            <select id="unit"></select>
+        </div>
+        <div class="input-group">
+            <label>Weight/Qty</label>
+            <input id="qty" type="number" min="1">
+        </div>
+        <div class="input-group">
+            <label>Packets</label>
+            <input id="packetCount" type="number" min="1" value="1">
+        </div>
+    </div>
 
-<div class="input-grid">
-  <div class="input-group">
-    <label>Unit</label>
-    <select id="unit"></select>
-  </div>
-  <div class="input-group">
-    <label>Weight/Qty</label>
-    <input id="qty" type="number" min="1">
-  </div>
-  <div class="input-group">
-    <label>Packets</label>
-    <input id="packetCount" type="number" min="1" value="1">
-  </div>
-</div>
+    <button id="addBtn">➕ Add to List</button>
 
-<button id="addBtn">➕ Add to List</button>
+    <table>
+        <thead>
+            <tr><th>Item</th><th>Qty</th><th>Pkt</th><th>Action</th></tr>
+        </thead>
+        <tbody id="cartTable"></tbody>
+    </table>
 
-<table>
-<thead>
-<tr><th>Item</th><th>Qty</th><th>Pkt</th><th>Action</th></tr>
-</thead>
-<tbody id="cartTable"></tbody>
-</table>
-
-<button id="orderBtn">✅ Place Order on WhatsApp</button>
-
+    <button id="orderBtn">✅ Place Order</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// INITIALIZE FIREBASE
 firebase.initializeApp({
- apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
- authDomain: "mewapeople-25844.firebaseapp.com",
- projectId: "mewapeople-25844",
- storageBucket: "mewapeople-25844.firebasestorage.app",
- messagingSenderId: "53407017674",
- appId: "1:53407017674:web:1667bb04862a76c02a6233"
+    apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
+    authDomain: "mewapeople-25844.firebaseapp.com",
+    projectId: "mewapeople-25844",
+    storageBucket: "mewapeople-25844.firebasestorage.app",
+    messagingSenderId: "53407017674",
+    appId: "1:53407017674:web:1667bb04862a76c02a6233"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-const categoryBox=document.getElementById("category");
-const itemBox=document.getElementById("item");
-const itemSearch=document.getElementById("itemSearch");
-const qtyBox=document.getElementById("qty");
-const unitBox=document.getElementById("unit");
-const packetBox=document.getElementById("packetCount");
-const cartTable=document.getElementById("cartTable");
+let itemsList = [], cart = [];
 
-let itemsList=[], cart=[];
+// Load Data
+async function loadData() {
+    const catSnap = await db.collection("categories").get();
+    let categoriesData = [];
+    catSnap.forEach(d => categoriesData.push(d.data()));
+    categoriesData.sort((a, b) => a.en.localeCompare(b.en));
 
-/* LOAD CATEGORIES & ITEMS */
-async function loadData(){
- try {
-  const catSnap = await db.collection("categories").get();
-  let categoriesData = [];
-  catSnap.forEach(d => categoriesData.push(d.data()));
-  
-  // Alphabetical Sort
-  categoriesData.sort((a, b) => a.en.localeCompare(b.en));
+    const catBox = document.getElementById("category");
+    catBox.innerHTML = "<option value=''>-- Choose Category --</option>";
+    categoriesData.forEach(c => {
+        catBox.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+    });
 
-  categoryBox.innerHTML = "<option value=''>-- Choose Category --</option>";
-  categoriesData.forEach(c => {
-    categoryBox.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
-  });
-
-  const itemSnap = await db.collection("items").get();
-  itemsList = itemSnap.docs.map(d=>d.data());
- } catch(e) { console.error("Load Error: ", e); }
+    const itemSnap = await db.collection("items").get();
+    itemsList = itemSnap.docs.map(d => d.data());
 }
 loadData();
 
-categoryBox.onchange = () => {
-  itemSearch.value = "";
-  renderFilteredItems();
+document.getElementById("category").onchange = renderFilteredItems;
+document.getElementById("itemSearch").oninput = renderFilteredItems;
+document.getElementById("item").onchange = updateUnits;
+
+function renderFilteredItems() {
+    const searchText = document.getElementById("itemSearch").value.toLowerCase();
+    const selectedCat = document.getElementById("category").value;
+    let filtered = itemsList;
+
+    if (selectedCat) filtered = filtered.filter(i => i.cat === selectedCat);
+    if (searchText) {
+        filtered = filtered.filter(i => 
+            i.en.toLowerCase().includes(searchText) || 
+            (i.hi && i.hi.includes(searchText))
+        );
+    }
+
+    filtered.sort((a, b) => a.en.localeCompare(b.en));
+    const itemBox = document.getElementById("item");
+    itemBox.innerHTML = "";
+    filtered.forEach(i => {
+        itemBox.innerHTML += `<option value="${i.en}">${i.en} / ${i.hi}</option>`;
+    });
+    updateUnits();
+}
+
+function updateUnits() {
+    const i = itemsList.find(x => x.en === document.getElementById("item").value);
+    if (!i) return;
+    const unitBox = document.getElementById("unit");
+    unitBox.innerHTML = "";
+    (i.units || []).forEach(u => {
+        unitBox.innerHTML += `<option value="${u}">${u}</option>`;
+    });
+    document.getElementById("qty").value = i.minQty || 1;
+}
+
+// Cart Logic
+document.getElementById("addBtn").onclick = function() {
+    const itemVal = document.getElementById("item").value;
+    const i = itemsList.find(x => x.en === itemVal);
+    if (!i) return alert("Select an item");
+
+    cart.push({
+        en: i.en, hi: i.hi,
+        qty: document.getElementById("qty").value,
+        unit: document.getElementById("unit").value,
+        packets: document.getElementById("packetCount").value
+    });
+    renderCart();
 };
 
-itemSearch.oninput = renderFilteredItems;
-
-/* RENDER ITEMS BASED ON SEARCH/CATEGORY */
-function renderFilteredItems(){
- const searchText = itemSearch.value.toLowerCase();
- const selectedCat = categoryBox.value;
-
- let filtered = itemsList;
-
- // Filter by category if selected
- if(selectedCat) {
-    filtered = filtered.filter(i => i.cat === selectedCat);
- }
- 
- // Filter by Search Text
- if(searchText) {
-  filtered = filtered.filter(i => 
-    i.en.toLowerCase().includes(searchText) || 
-    (i.hi && i.hi.toLowerCase().includes(searchText))
-  );
- }
-
- // Sort A-Z
- filtered.sort((a, b) => a.en.localeCompare(b.en));
-
- itemBox.innerHTML = "";
- filtered.forEach(i => {
-  itemBox.innerHTML += `<option value="${i.en}">${i.en} / ${i.hi}</option>`;
- });
- 
- updateUnitsAndLimits();
+function renderCart() {
+    const table = document.getElementById("cartTable");
+    table.innerHTML = "";
+    cart.forEach((c, idx) => {
+        table.innerHTML += `<tr><td>${c.hi}</td><td>${c.qty}${c.unit}</td><td>${c.packets}</td><td class="delete-btn" onclick="removeItem(${idx})">🗑️</td></tr>`;
+    });
 }
+window.removeItem = idx => { cart.splice(idx, 1); renderCart(); };
 
-itemBox.onchange = updateUnitsAndLimits;
+// Modal Logic
+window.closeModal = () => document.getElementById("overlay").style.display = "none";
 
-function updateUnitsAndLimits(){
- const i = itemsList.find(x => x.en === itemBox.value);
- if(!i) return;
+document.getElementById("orderBtn").onclick = function() {
+    const name = document.getElementById("custName").value.trim();
+    const mobile = document.getElementById("custMobile").value.trim();
+    const address = document.getElementById("custAddress").value.trim();
 
- unitBox.innerHTML = "";
- (i.units || []).forEach(u => {
-  unitBox.innerHTML += `<option value="${u}">${u}</option>`;
- });
+    if (!name || mobile.length < 10 || !address) return alert("Please fill all details correctly");
+    if (cart.length === 0) return alert("Cart is empty");
 
- qtyBox.value = i.minQty || 1;
-}
+    let summaryHtml = `
+        <div class="summary-line"><b>Name:</b> ${name}</div>
+        <div class="summary-line"><b>Mobile:</b> ${mobile}</div>
+        <div class="summary-line"><b>Address:</b> ${address}</div>
+        <div class="summary-line"><b>Type:</b> ${document.getElementById("deliveryType").value}</div>
+        <hr><b>Items:</b><br>
+    `;
+    cart.forEach(c => {
+        summaryHtml += `<div class="summary-line">• ${c.hi} (${c.qty} ${c.unit}) - ${c.packets} Pkt</div>`;
+    });
 
-/* ADD TO CART */
-document.getElementById("addBtn").onclick = function(){
- const i = itemsList.find(x => x.en === itemBox.value);
- if(!i) return alert("Select an item first");
-
- const q = Number(qtyBox.value);
- if(q <= 0) return alert("Invalid Quantity");
-
- cart.push({
-  en: i.en,
-  hi: i.hi,
-  qty: q,
-  unit: unitBox.value,
-  packets: packetBox.value
- });
- renderCart();
+    document.getElementById("summaryContent").innerHTML = summaryHtml;
+    document.getElementById("overlay").style.display = "flex";
 };
 
-function renderCart(){
- cartTable.innerHTML = "";
- cart.forEach((c, index) => {
-  cartTable.innerHTML += `
-   <tr>
-    <td>${c.hi}<br><small>${c.en}</small></td>
-    <td>${c.qty} ${c.unit}</td>
-    <td>${c.packets}</td>
-    <td class="delete-btn" onclick="removeItem(${index})">🗑️</td>
-   </tr>`;
- });
-}
+// Final Submit & Clean WhatsApp Message
+window.finalSubmit = async function() {
+    const name = document.getElementById("custName").value.trim();
+    const mobile = document.getElementById("custMobile").value.trim();
+    const address = document.getElementById("custAddress").value.trim();
+    const delivery = document.getElementById("deliveryType").value;
+    const code = "ORD-" + Date.now().toString().slice(-6);
+    const time = new Date().toLocaleString('en-IN');
 
-window.removeItem = i => { cart.splice(i,1); renderCart(); };
+    const itemsDb = cart.map(i => `${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`).join("\n");
+    
+    // Clean WhatsApp View
+    const itemsWa = cart.map((i, index) => `*${index + 1}.* ${i.hi} → *${i.qty} ${i.unit}* (${i.packets} Pkt)`).join("\n");
 
-/* SUBMIT ORDER */
-document.getElementById("orderBtn").onclick = async function(){
- const name = document.getElementById("custName").value.trim();
- const mobile = document.getElementById("custMobile").value.trim();
- const address = document.getElementById("custAddress").value.trim();
+    try {
+        await db.collection("orders").add({ code, name, mobile, address, type: delivery, items: itemsDb, time });
 
- if(!name || mobile.length < 10 || !address){
-  alert("Please fill name, mobile (10 digits) and address correctly.");
-  return;
- }
- if(cart.length === 0){
-  alert("Your cart is empty!");
-  return;
- }
+        const message = 
+`📦 *नया ऑर्डर: #${code}*
+━━━━━━━━━━━━━━━
+👤 *ग्राहक:* ${name}
+📞 *मोबाइल:* ${mobile}
+📍 *पता:* ${address}
+🚚 *डिलीवरी:* ${delivery}
 
- const orderCode = "ORD-" + Math.floor(1000 + Math.random() * 9000);
- const timestamp = new Date().toLocaleString('en-IN');
- 
- // Format for Admin Panel Printing
- const itemsSummary = cart
-  .map(i => `${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`)
-  .join("\n");
+🛒 *सामान की सूची:*
+━━━━━━━━━━━━━━━
+${itemsWa}
 
- try {
-  await db.collection("orders").add({
-   code: orderCode,
-   name: name,
-   mobile: mobile,
-   address: address,
-   type: document.getElementById("deliveryType").value,
-   items: itemsSummary,
-   time: timestamp
-  });
+-------------------------------
+🙏 *सुरणा अशोक कुमार अरविंद कुमार*
+ जोधपुर`;
 
-  const waText = `*नया ऑर्डर: ${orderCode}*\n` +
-   `--------------------------\n` +
-   `👤 नाम: ${name}\n` +
-   `📞 मोबाइल: ${mobile}\n` +
-   `📍 पता: ${address}\n` +
-   `🚚 टाइप: ${document.getElementById("deliveryType").value}\n\n` +
-   `📝 *सामान की लिस्ट:*\n${itemsSummary}`;
-
-  window.location.href = "https://wa.me/919462439993?text=" + encodeURIComponent(waText);
- } catch(e) { alert("Error placing order. Please try again."); }
+        window.location.href = "https://wa.me/919462439993?text=" + encodeURIComponent(message);
+    } catch (e) { alert("Error: " + e.message); }
 };
 </script>
-
 </body>
 </html>
