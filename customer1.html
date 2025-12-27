@@ -6,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+  /* Add this inside your <style> block */
+#limitHint { font-size: 12px; color: #d32f2f; margin-top: 2px; font-weight: bold; }
 body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
 .container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
 h2{text-align:center;color:#1b5e20}
@@ -79,6 +81,11 @@ th{background:#e8f5e9}
   <div class="input-group">
     <label>Weight</label>
     <input id="qty" type="number" min="1">
+    <div class="input-group">
+    <label>Weight</label>
+    <input id="qty" type="number">
+    <div id="limitHint"></div> 
+</div>
   </div>
   <div class="input-group">
     <label>Packets</label>
@@ -192,17 +199,23 @@ unit.onchange = applyLimits;
 function applyLimits() {
   const i = items.find(x => x.en === item.value);
   if (!i) return;
-
   const selectedUnit = unit.value.toLowerCase();
+  const limitHint = document.getElementById("limitHint");
   
-  if (selectedUnit === "gm" || selectedUnit === "g") {
-    qty.min = 1;
+  // Logic: Grams uses Admin Min/1000 Max. Kg uses 1 Min/Admin Max.
+  if (selectedUnit === "gm" || selectedUnit === "gram") {
+    qty.min = i.minQty || 1; 
     qty.max = 1000;
-  } else {
+  } else if (selectedUnit === "kg") {
     qty.min = 1;
     qty.max = i.maxQty || 9999;
+  } else {
+    qty.min = i.minQty || 1;
+    qty.max = i.maxQty || 9999;
   }
-  qty.value = i.minQty || 1;
+  
+  qty.value = qty.min;
+  limitHint.innerText = `Limit: ${qty.min} - ${qty.max} ${unit.value}`;
 }
 
 /* ADD ITEM */
@@ -214,11 +227,12 @@ addBtn.onclick=function(){
  const duplicate = cart.find(c => c.hi === i.hi);
  if(duplicate) { alert("This item is already added to your list."); return; }
 
- const q=Number(qty.value);
- if(q < qty.min || q > qty.max){
-  alert(`Quantity must be between ${qty.min} and ${qty.max}`);
-  return;
- }
+ // Replace the current quantity if() check with this
+const q = Number(qty.value);
+if (q < qty.min || q > qty.max) { 
+    alert(`Error: For ${unit.value}, Quantity must be ${qty.min} to ${qty.max}`); 
+    return; 
+}
 
  cart.push({
   hi:i.hi,
