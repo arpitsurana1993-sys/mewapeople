@@ -6,44 +6,55 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial, sans-serif;background:#f1f8e9;margin:0;padding:10px}
-.container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,0.1)}
-h2{text-align:center;color:#1b5e20;margin-bottom:5px}
-.shop-info{text-align:center;font-size:14px;margin-bottom:15px;color:#555}
-label{font-weight:bold;margin-top:12px;display:block;color:#333}
-input,select,textarea,button{width:100%;padding:12px;margin-top:5px;font-size:16px;box-sizing:border-box;border:1px solid #ccc;border-radius:8px}
-button{background:#2e7d32;color:#fff;border:none;border-radius:25px;margin-top:15px;cursor:pointer;font-weight:bold}
-button:hover{background:#1b5e20}
-table{width:100%;margin-top:15px;border-collapse:collapse}
-th,td{border:1px solid #ddd;padding:10px;text-align:center}
-th{background:#e8f5e9;color:#2e7d32}
+body{font-family:Arial;background:#f1f8e9;margin:0;padding:10px}
+.container{max-width:720px;margin:auto;background:#fff;padding:15px;border-radius:12px}
+h2{text-align:center;color:#1b5e20}
+label{font-weight:bold;margin-top:10px;display:block}
+input,select,textarea,button{width:100%;padding:10px;margin-top:5px;font-size:16px;box-sizing:border-box}
+button{background:#2e7d32;color:#fff;border:none;border-radius:25px;margin-top:15px;cursor:pointer}
+table{width:100%;margin-top:10px;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+th{background:#e8f5e9}
 
-.input-grid {display: flex;gap: 10px;margin-top: 10px}
-.input-group {display: flex;flex-direction: column;flex: 1}
-.input-group label {margin-top: 0;font-size: 13px}
+.input-grid { display: flex; gap: 10px; margin-top: 10px; }
+.input-group { display: flex; flex-direction: column; flex: 1; }
+.input-group label { margin-top: 0; font-size: 14px; }
 
-#itemSearch {background-color: #fff9c4;border: 2px solid #fbc02d;font-weight: bold}
-#orderBtn {background:#0d47a1;height: 55px;font-size: 18px}
-.delete-btn {color:#d32f2f; cursor:pointer; font-size: 20px}
+#itemSearch { background-color: #fff9c4; border: 1px solid #fbc02d; margin-bottom: 5px; }
+
+/* Modal for Confirmation */
+#confirmOverlay {display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;}
+#confirmModal {background:white; padding:20px; border-radius:10px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto;}
 </style>
 </head>
 
 <body>
-<div class="container">
 
-<h2>🛒 Surana Ashok Kumar</h2>
-<div class="shop-info">
-    📍 मिर्ची बाजार, जोधपुर | 📞 9462439993
+<div id="confirmOverlay">
+    <div id="confirmModal">
+        <h3 style="text-align:center; color:#1b5e20;">Confirm Your Order</h3>
+        <div id="confirmText"></div>
+        <button onclick="finalSubmit()">✅ Confirm & Send WhatsApp</button>
+        <button style="background:#666;" onclick="document.getElementById('confirmOverlay').style.display='none'">❌ Edit Order</button>
+    </div>
 </div>
 
-<label>Customer Name / नाम *</label>
-<input id="custName" placeholder="Enter your name" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
+<div class="container">
+
+<h2>🛒 Surana Ashok Kumar Arvind Kumar</h2>
+
+<div style="text-align:center;font-size:18px;margin-bottom:10px;">
+ <a href="https://maps.app.goo.gl/exwWju9MgBr5epFV6" target="_blank" style="text-decoration:none;color:#0d47a1;">📍 Mirchi Bazar</a><br>
+ <a href="tel:9462439993" style="text-decoration:none;color:#1b5e20;font-weight:bold;">📞 9462439993</a>
+</div>
+<label>Name / नाम *</label>
+<input id="custName" oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')">
 
 <label>Mobile / मोबाइल *</label>
-<input id="custMobile" inputmode="numeric" placeholder="10 digit mobile number" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+<input id="custMobile" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
 
 <label>Address / पता *</label>
-<textarea id="custAddress" rows="2" placeholder="Full address for delivery"></textarea>
+<textarea id="custAddress"></textarea>
 
 <label>Delivery Type</label>
 <select id="deliveryType">
@@ -51,14 +62,14 @@ th{background:#e8f5e9;color:#2e7d32}
  <option>Pick from Shop</option>
 </select>
 
-<hr style="margin-top:20px; border:0; border-top:1px solid #eee">
+<hr>
 
-<label>1. Select Category</label>
+<label>Category</label>
 <select id="category"></select>
 
-<label>2. Search & Select Item</label>
-<input type="text" id="itemSearch" placeholder="🔍 Type item name (English or Hindi)...">
-<select id="item" style="margin-top:8px"></select>
+<label>Item / सामान खोजें</label>
+<input type="text" id="itemSearch" placeholder="🔍 Type item name to search...">
+<select id="item"></select>
 
 <div class="input-grid">
   <div class="input-group">
@@ -66,25 +77,25 @@ th{background:#e8f5e9;color:#2e7d32}
     <select id="unit"></select>
   </div>
   <div class="input-group">
-    <label>Weight/Qty</label>
+    <label>Weight</label>
     <input id="qty" type="number" min="1">
   </div>
   <div class="input-group">
     <label>Packets</label>
-    <input id="packetCount" type="number" min="1" value="1">
+    <input id="packetCount" type="number" min="1" value="1" placeholder="Packets">
   </div>
 </div>
 
-<button id="addBtn">➕ Add to List</button>
+<button id="addBtn">Add Item</button>
 
 <table>
 <thead>
-<tr><th>Item</th><th>Qty</th><th>Pkt</th><th>Action</th></tr>
+<tr><th>Item</th><th>Qty</th><th>Packets</th><th>❌</th></tr>
 </thead>
 <tbody id="cartTable"></tbody>
 </table>
 
-<button id="orderBtn">✅ Place Order on WhatsApp</button>
+<button id="orderBtn">Place Order & WhatsApp</button>
 
 </div>
 
@@ -92,7 +103,6 @@ th{background:#e8f5e9;color:#2e7d32}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-// INITIALIZE FIREBASE
 firebase.initializeApp({
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
  authDomain: "mewapeople-25844.firebaseapp.com",
@@ -103,186 +113,174 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-const categoryBox=document.getElementById("category");
-const itemBox=document.getElementById("item");
+const category=document.getElementById("category");
+const item=document.getElementById("item");
 const itemSearch=document.getElementById("itemSearch");
-const qtyBox=document.getElementById("qty");
-const unitBox=document.getElementById("unit");
-const packetBox=document.getElementById("packetCount");
+const qty=document.getElementById("qty");
+const unit=document.getElementById("unit");
+const packetCount=document.getElementById("packetCount");
 const cartTable=document.getElementById("cartTable");
 
-let itemsList=[], cart=[];
+let items=[], cart=[];
 
-/* LOAD CATEGORIES & ITEMS */
+/* LOAD DATA */
 async function loadData(){
- try {
-  const catSnap = await db.collection("categories").get();
-  let categoriesData = [];
-  catSnap.forEach(d => categoriesData.push(d.data()));
-  
-  // Alphabetical Sort
-  categoriesData.sort((a, b) => a.en.localeCompare(b.en));
+ const cs=await db.collection("categories").get();
+ let categoriesData = [];
+ cs.forEach(d => categoriesData.push(d.data()));
 
-  categoryBox.innerHTML = "<option value=''>-- Choose Category --</option>";
-  categoriesData.forEach(c => {
-    categoryBox.innerHTML += `<option value="${c.en}">${c.en} / ${c.hi}</option>`;
-  });
+ // Feature: Sort Categories A-Z
+ categoriesData.sort((a, b) => a.en.localeCompare(b.en));
 
-  const itemSnap = await db.collection("items").get();
-  itemsList = itemSnap.docs.map(d=>d.data());
- } catch(e) { console.error("Load Error: ", e); }
+ category.innerHTML="";
+ categoriesData.forEach(c => {
+  category.innerHTML+=`<option value="${c.en}">${c.en} / ${c.hi}</option>`;
+ });
+
+ const it=await db.collection("items").get();
+ items=it.docs.map(d=>d.data());
+
+ loadItems();
 }
 loadData();
 
-categoryBox.onchange = () => {
-  itemSearch.value = "";
-  renderFilteredItems();
+category.onchange=function(){
+ itemSearch.value = ""; 
+ loadItems();
 };
 
-itemSearch.oninput = renderFilteredItems;
-
-/* RENDER ITEMS BASED ON SEARCH/CATEGORY */
-function renderFilteredItems(){
+/* FILTER AND RENDER ITEMS */
+function loadItems(){
  const searchText = itemSearch.value.toLowerCase();
- const selectedCat = categoryBox.value;
-
- let filtered = itemsList;
-
- // Filter by category if selected
- if(selectedCat) {
-    filtered = filtered.filter(i => i.cat === selectedCat);
- }
+ let filtered = items.filter(i => i.cat === category.value);
  
- // Filter by Search Text
  if(searchText) {
   filtered = filtered.filter(i => 
     i.en.toLowerCase().includes(searchText) || 
-    (i.hi && i.hi.toLowerCase().includes(searchText))
+    i.hi.toLowerCase().includes(searchText)
   );
  }
 
- // Sort A-Z
+ // Feature: Sort Items A-Z
  filtered.sort((a, b) => a.en.localeCompare(b.en));
 
- itemBox.innerHTML = "";
- filtered.forEach(i => {
-  itemBox.innerHTML += `<option value="${i.en}">${i.en} / ${i.hi}</option>`;
+ item.innerHTML="";
+ filtered.forEach(i=>{
+  item.innerHTML+=`<option value="${i.en}">${i.en} / ${i.hi}</option>`;
  });
  
- updateUnitsAndLimits();
+ loadQtyUnit();
 }
 
-itemBox.onchange = updateUnitsAndLimits;
+itemSearch.oninput = loadItems;
+item.onchange=loadQtyUnit;
 
-function updateUnitsAndLimits(){
- const i = itemsList.find(x => x.en === itemBox.value);
+function loadQtyUnit(){
+ const i=items.find(x=>x.en===item.value);
  if(!i) return;
 
- unitBox.innerHTML = "";
- (i.units || []).forEach(u => {
-  unitBox.innerHTML += `<option value="${u}">${u}</option>`;
+ unit.innerHTML="";
+ (i.units || []).forEach(u=>{
+  unit.innerHTML+=`<option value="${u}">${u}</option>`;
  });
 
- qtyBox.value = i.minQty || 1;
+ applyLimits();
 }
 
-/* ADD TO CART */
-document.getElementById("addBtn").onclick = function(){
- const i = itemsList.find(x => x.en === itemBox.value);
- if(!i) return alert("Select an item first");
+unit.onchange = applyLimits;
 
- const q = Number(qtyBox.value);
- if(q <= 0) return alert("Invalid Quantity");
+function applyLimits() {
+  const i = items.find(x => x.en === item.value);
+  if (!i) return;
+
+  const selectedUnit = unit.value.toLowerCase();
+  
+  if (selectedUnit === "gm" || selectedUnit === "g") {
+    qty.min = 1;
+    qty.max = 1000;
+  } else {
+    qty.min = 1;
+    qty.max = i.maxQty || 9999;
+  }
+  qty.value = i.minQty || 1;
+}
+
+/* ADD ITEM */
+addBtn.onclick=function(){
+ const i=items.find(x=>x.en===item.value);
+ if(!i) return;
+
+ // Feature: Duplicate Check
+ const duplicate = cart.find(c => c.hi === i.hi);
+ if(duplicate) { alert("This item is already added to your list."); return; }
+
+ const q=Number(qty.value);
+ if(q < qty.min || q > qty.max){
+  alert(`Quantity must be between ${qty.min} and ${qty.max}`);
+  return;
+ }
 
  cart.push({
-  en: i.en,
-  hi: i.hi,
-  qty: q,
-  unit: unitBox.value,
-  packets: packetBox.value
+  hi:i.hi,
+  qty:q,
+  unit:unit.value,
+  packets:packetCount.value
  });
  renderCart();
 };
 
 function renderCart(){
- cartTable.innerHTML = "";
- cart.forEach((c, index) => {
-  cartTable.innerHTML += `
+ cartTable.innerHTML="";
+ cart.forEach((c,i)=>{
+  cartTable.innerHTML+=`
    <tr>
-    <td>${c.hi}<br><small>${c.en}</small></td>
+    <td>${c.hi}</td>
     <td>${c.qty} ${c.unit}</td>
     <td>${c.packets}</td>
-    <td class="delete-btn" onclick="removeItem(${index})">🗑️</td>
+    <td onclick="removeItem(${i})" style="cursor:pointer">❌</td>
    </tr>`;
  });
 }
+window.removeItem=i=>{cart.splice(i,1);renderCart();};
 
-window.removeItem = i => { cart.splice(i,1); renderCart(); };
+/* MODAL STEP */
+orderBtn.onclick=function(){
+ const name=custName.value.trim();
+ const mobile=custMobile.value.trim();
+ const address=custAddress.value.trim();
 
-/* SUBMIT ORDER */
-document.getElementById("orderBtn").onclick = async function() {
-    const name = custName.value.trim();
-    const mobile = custMobile.value.trim();
-    const address = custAddress.value.trim();
-    const delivery = deliveryType.value;
+ if(!name||!mobile||!address){ alert("All fields are mandatory"); return; }
+ if(cart.length===0){ alert("Add at least one item"); return; }
 
-    if (!name || !mobile || !address) {
-        alert("All fields are mandatory");
-        return;
-    }
-    if (cart.length === 0) {
-        alert("Add at least one item");
-        return;
-    }
+ let summary = `<p><b>Name:</b> ${name}</p><p><b>Items:</b></p><ul>`;
+ cart.forEach(c => { summary += `<li>${c.hi} (${c.qty} ${c.unit})</li>`; });
+ summary += "</ul>";
+ 
+ document.getElementById("confirmText").innerHTML = summary;
+ document.getElementById("confirmOverlay").style.display = "flex";
+};
 
-    const code = "ORD" + Date.now().toString().slice(-6); // Shortened Order Code
-    const time = new Date().toLocaleString('en-IN', { hour12: true });
+/* FINAL SUBMIT */
+window.finalSubmit = async function(){
+ const name=custName.value.trim();
+ const mobile=custMobile.value.trim();
+ const address=custAddress.value.trim();
+ const code="ORD"+Date.now().toString().slice(-4);
+ const time=new Date().toLocaleString();
+ 
+ const itemsDbText=cart.map(i=>`${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`).join("\n");
+ const waItemsText=cart.map((i,idx)=>`*${idx+1}.* ${i.hi}: ${i.qty}${i.unit} (${i.packets} Pkt)`).join("\n");
 
-    // 1. Format items for Database (Admin Printing)
-    const itemsDbText = cart
-        .map(i => `${i.hi} ${i.qty} ${i.unit}, पैकेट: ${i.packets}`)
-        .join("\n");
+ try {
+    await db.collection("orders").add({
+     code,name,mobile,address,
+     type:deliveryType.value,
+     items:itemsDbText,time
+    });
 
-    // 2. Format items for WhatsApp (Clean View)
-    const itemsWaText = cart
-        .map((i, index) => `*${index + 1}.* ${i.hi} → *${i.qty} ${i.unit}* (${i.packets} Pkt)`)
-        .join("\n");
-
-    try {
-        // Save to Firebase
-        await db.collection("orders").add({
-            code, name, mobile, address,
-            type: delivery,
-            items: itemsDbText, time
-        });
-
-        // 3. Construct the Clean WhatsApp Message
-        const message = 
-`📦 *नया ऑर्डर प्राप्त हुआ* 📦
--------------------------------
-🆔 *ऑर्डर नंबर:* #${code}
-📅 *दिनांक:* ${time}
-
-👤 *ग्राहक का विवरण:*
-━━━━━━━━━━━━━━━
-*नाम:* ${name}
-*मोबाइल:* ${mobile}
-*पता:* ${address}
-*डिलीवरी:* ${delivery}
-
-🛒 *सामान की सूची:*
-━━━━━━━━━━━━━━━
-${itemsWaText}
-
--------------------------------
-🙏 *सुरणा अशोक कुमार अरविंद कुमार*
-📍 मिर्ची बाजार, जोधपुर`;
-
-        window.location.href = "https://wa.me/919462439993?text=" + encodeURIComponent(message);
-        
-    } catch (e) {
-        alert("Error: " + e.message);
-    }
+    const waMsg = `*नया ऑर्डर: #${code}*\n👤 *ग्राहक:* ${name}\n📞 *मोबाइल:* ${mobile}\n📍 *पता:* ${address}\n\n🛒 *सामान:* \n${waItemsText}`;
+    window.location.href="https://wa.me/919462439993?text="+encodeURIComponent(waMsg);
+ } catch(e) { alert("Error: " + e.message); }
 };
 </script>
 
