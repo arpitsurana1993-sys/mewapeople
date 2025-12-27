@@ -20,9 +20,11 @@ table{width:100%;border-collapse:collapse;margin-top:20px;background:#fff}
 th,td{border:1px solid #ddd;padding:12px;text-align:center}
 th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
 .delete{color:#d32f2f;cursor:pointer; font-weight:bold; font-size:18px}
+.edit-btn{color:#0d47a1; cursor:pointer; font-weight:bold; margin-right:10px}
 .action-btn {background:#2e7d32; color:white; padding:15px; width:100%; border:none; border-radius:6px; margin-top:20px; cursor:pointer; font-size:16px; font-weight:bold}
 .action-btn:hover{background:#1b5e20}
 .print-btn {background:#0d47a1; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold}
+#searchItem{margin-bottom:10px; border:2px solid #2e7d32}
 </style>
 </head>
 
@@ -41,7 +43,7 @@ th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
 <section id="mainSection">
 <nav>
 <button onclick="showTab('cat')">Categories</button>
-<button onclick="showTab('item')">Add Items</button>
+<button onclick="showTab('item')">Manage Items</button>
 <button onclick="showTab('orders')">View Orders</button>
 <button onclick="showTab('cred')">Settings</button>
 </nav>
@@ -56,18 +58,20 @@ th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
 <section id="cat">
 <h3>Manage Categories</h3>
 <div style="display:flex; gap:10px;">
-  <input id="catEn" placeholder="Category (English) e.g. Dry Fruits">
-  <input id="catHi" placeholder="Category (Hindi) e.g. मेवा">
+  <input id="catEn" placeholder="Category (English)">
+  <input id="catHi" placeholder="Category (Hindi)">
 </div>
 <button class="action-btn" onclick="addCategory()">Add Category</button>
-<table>
+<table id="catTableFull">
 <thead><tr><th>English</th><th>Hindi</th><th>Action</th></tr></thead>
 <tbody id="catTable"></tbody>
 </table>
 </section>
 
 <section id="item">
-<h3>Manage Shop Items</h3>
+<h3 id="itemFormTitle">Add New Shop Item</h3>
+<input type="hidden" id="editItemId">
+
 <label>1. Select Category</label>
 <select id="catSelect"></select>
 
@@ -113,7 +117,12 @@ th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
   </div>
 </div>
 
-<button class="action-btn" onclick="addItem()">Add Item to Live Shop</button>
+<button id="submitBtn" class="action-btn" onclick="addItem()">Add Item to Live Shop</button>
+<button id="cancelEditBtn" class="action-btn" style="display:none; background:#666;" onclick="resetItemForm()">Cancel Edit</button>
+
+<hr style="margin-top:40px">
+<h3>Live Item Inventory</h3>
+<input type="text" id="searchItem" placeholder="🔍 Search item by name (Eng or Hindi)..." onkeyup="filterItems()">
 
 <table>
 <thead>
@@ -151,7 +160,7 @@ th{background:#e8f5e9;color:#2e7d32;font-weight:bold}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
  apiKey: "AIzaSyDKzDGac5Zl1RZlZDnkeNZrMf6OGabSiRY",
@@ -164,6 +173,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+let allItems = []; // Global store for searching
 
 // LOGIN LOGIC
 window.login = async function(){
@@ -194,8 +205,8 @@ window.showTab = function(id){
 
 // CATEGORY MANAGEMENT
 window.addCategory = async function(){
- const en = document.getElementById("catEn").value;
- const hi = document.getElementById("catHi").value;
+ const en = document.getElementById("catEn").value.trim();
+ const hi = document.getElementById("catHi").value.trim();
  if(!en || !hi) return alert("Both English and Hindi names required");
  try {
   await addDoc(collection(db,"categories"),{en, hi});
@@ -224,56 +235,114 @@ window.delCat = async (id) => { if(confirm("Permanently delete this category?"))
 
 // ITEM MANAGEMENT
 window.addItem = async function(){
+ const id = document.getElementById("editItemId").value;
+ const cat = document.getElementById("catSelect").value;
+ const en = document.getElementById("itemEn").value.trim();
+ const hi = document.getElementById("itemHi").value.trim();
+ const u1 = document.getElementById("unit1").value;
+ const u2 = document.getElementById("unit2").value;
+ const min = document.getElementById("minQty").value;
+ const max = document.getElementById("maxQty").value;
+
+ if(!cat || !en || !hi || !u1) return alert("Please fill all required fields");
+
+ // 1. DUPLICATE CHECK (Only if adding new)
+ if(!id){
+    const exists = allItems.find(i => i.en.toLowerCase() === en.toLowerCase() || i.hi === hi);
+    if(exists) return alert("Error: Item with this English or Hindi name already exists!");
+ }
+
+ const units = [u1, u2].filter(u => u !== "");
+ const itemData = { cat, en, hi, units, minQty: Number(min), maxQty: Number(max) };
+
  try {
-  const cat = document.getElementById("catSelect").value;
-  const en = document.getElementById("itemEn").value;
-  const hi = document.getElementById("itemHi").value;
-  const u1 = document.getElementById("unit1").value;
-  const u2 = document.getElementById("unit2").value;
-  const min = document.getElementById("minQty").value;
-  const max = document.getElementById("maxQty").value;
-
-  if(!cat || !en || !hi || !u1) return alert("Please fill all required fields (Category, Names, Unit 1)");
-
-  const units = [u1, u2].filter(u => u !== "");
-
-  await addDoc(collection(db,"items"), {
-   cat: String(cat),
-   en: String(en),
-   hi: String(hi),
-   units: units,
-   minQty: Number(min),
-   maxQty: Number(max)
-  });
-
-  alert("✅ Success: " + en + " added!");
-  document.getElementById("itemEn").value = "";
-  document.getElementById("itemHi").value = "";
+  if(id){
+    await updateDoc(doc(db, "items", id), itemData);
+    alert("Item Updated Successfully!");
+  } else {
+    await addDoc(collection(db,"items"), itemData);
+    alert("Item Added Successfully!");
+  }
+  resetItemForm();
   loadItems();
  } catch(e) { alert("Firebase Error: " + e.message); }
 };
 
+window.resetItemForm = function(){
+  document.getElementById("editItemId").value = "";
+  document.getElementById("itemEn").value = "";
+  document.getElementById("itemHi").value = "";
+  document.getElementById("unit1").value = "";
+  document.getElementById("unit2").value = "";
+  document.getElementById("itemFormTitle").innerText = "Add New Shop Item";
+  document.getElementById("submitBtn").innerText = "Add Item to Live Shop";
+  document.getElementById("cancelEditBtn").style.display = "none";
+}
+
+// EDIT FEATURE
+window.editItem = function(id){
+  const item = allItems.find(i => i.id === id);
+  if(!item) return;
+
+  document.getElementById("editItemId").value = item.id;
+  document.getElementById("catSelect").value = item.cat;
+  document.getElementById("itemEn").value = item.en;
+  document.getElementById("itemHi").value = item.hi;
+  document.getElementById("unit1").value = item.units[0] || "";
+  document.getElementById("unit2").value = item.units[1] || "";
+  document.getElementById("minQty").value = item.minQty;
+  document.getElementById("maxQty").value = item.maxQty;
+
+  document.getElementById("itemFormTitle").innerText = "Editing: " + item.en;
+  document.getElementById("submitBtn").innerText = "Update Item Details";
+  document.getElementById("cancelEditBtn").style.display = "block";
+  window.scrollTo(0,0);
+}
+
+// 2. ALPHABETICAL ORDER LOGIC
 async function loadItems(){
  const itemTable = document.getElementById("itemTable");
  let snap = await getDocs(collection(db,"items"));
- let list = [];
- snap.forEach(d => list.push({id:d.id, ...d.data()}));
- list.sort((a,b)=> a.en.localeCompare(b.en));
+ allItems = [];
+ snap.forEach(d => allItems.push({id:d.id, ...d.data()}));
+ 
+ // Sort by English Name Alphabetically
+ allItems.sort((a,b)=> a.en.localeCompare(b.en));
 
+ renderItemTable(allItems);
+}
+
+function renderItemTable(data){
+ const itemTable = document.getElementById("itemTable");
  itemTable.innerHTML = "";
- list.forEach(i=>{
+ data.forEach(i=>{
   itemTable.innerHTML += `<tr>
    <td>${i.cat}</td>
    <td>${i.en}<br><small>${i.hi}</small></td>
    <td>${(i.units||[]).join(", ")}</td>
    <td>${i.minQty}-${i.maxQty}</td>
-   <td class="delete" onclick="delItem('${i.id}')">❌</td>
+   <td>
+     <span class="edit-btn" onclick="editItem('${i.id}')">✏️ Edit</span>
+     <span class="delete" onclick="delItem('${i.id}')">❌</span>
+   </td>
   </tr>`;
  });
 }
+
+// 3. SEARCH FEATURE
+window.filterItems = function(){
+  const val = document.getElementById("searchItem").value.toLowerCase();
+  const filtered = allItems.filter(i => 
+    i.en.toLowerCase().includes(val) || 
+    i.hi.includes(val) || 
+    i.cat.toLowerCase().includes(val)
+  );
+  renderItemTable(filtered);
+}
+
 window.delItem = async (id) => { if(confirm("Remove this item from shop?")){ await deleteDoc(doc(db,"items",id)); loadItems(); } };
 
-// ORDERS & PRINTING LOGIC
+// ORDERS
 window.loadOrders = async function(){
  const orderTable = document.getElementById("orderTable");
  let snap = await getDocs(collection(db,"orders"));
@@ -285,7 +354,7 @@ window.loadOrders = async function(){
    <td>${o.code}</td>
    <td>${o.name}</td>
    <td>${o.mobile}</td>
-   <td><small>${o.items.substring(0,50)}...</small></td>
+   <td><small>${o.items ? o.items.substring(0,50) : ""}...</small></td>
    <td>${o.time}</td>
    <td>
      <button class="print-btn" onclick='printOrder(${orderData})'>Print Bill</button>
@@ -298,6 +367,7 @@ window.loadOrders = async function(){
 window.printOrder = function(o) {
   const printWindow = window.open('', '_blank');
   let itemRows = "";
+  if(!o.items) return alert("Order has no items");
   const lines = o.items.split('\n');
   
   lines.forEach(line => {
